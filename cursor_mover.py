@@ -9,6 +9,7 @@ import random
 import time
 import sys
 import threading
+import traceback
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -29,8 +30,13 @@ class CursorMoverApp:
         self.thread = None
         self.interval = 120  # Default: 2 minutes
 
-        # Get screen size (before creating UI)
-        self.screen_width, self.screen_height = pyautogui.size()
+        # Get screen size (try to get it, use fallback if fails)
+        try:
+            self.screen_width, self.screen_height = pyautogui.size()
+        except Exception as e:
+            print(f"Could not get screen size: {e}")
+            self.screen_width = 1920
+            self.screen_height = 1080
 
         # Create UI
         self.create_widgets()
@@ -119,6 +125,17 @@ class CursorMoverApp:
         if self.running:
             return
 
+        # CRITICAL: Test if we have accessibility permission
+        # This triggers the permission dialog if not granted
+        try:
+            test_pos = pyautogui.position()
+            print(f"Permission OK - Current position: {test_pos}")
+        except Exception as e:
+            print(f"Permission check failed: {e}")
+            # Show instructions and open System Settings
+            self.show_permission_instructions()
+            return
+
         self.running = True
         self.status_label.config(text="Active", fg="green")
         self.start_button.config(state=DISABLED)
@@ -131,6 +148,29 @@ class CursorMoverApp:
         # Show starting notification
         self.show_notification("Cursor movement started",
                               f"Moving every {self.interval} seconds")
+
+    def show_permission_instructions(self):
+        """Show instructions for granting accessibility permission"""
+        instructions = (
+            "Accessibility Permission Required\n\n"
+            "CursorMover needs permission to move your cursor.\n\n"
+            "1. A System Settings window will open\n"
+            "2. In the list, find 'CursorMover' or 'Terminal'\n"
+            "3. Enable the toggle next to it\n"
+            "4. Return here and click 'Start' again\n\n"
+            "Note: The app must appear in the list after you click 'Start'."
+        )
+
+        # Show the instruction dialog
+        result = messagebox.showinfo("Permission Required", instructions)
+
+        # Open System Settings to Accessibility
+        try:
+            import subprocess
+            subprocess.run(["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"])
+            print("Opening System Settings to Accessibility...")
+        except Exception as e:
+            print(f"Could not open System Settings: {e}")
 
     def stop_movement(self):
         if not self.running:
@@ -147,22 +187,31 @@ class CursorMoverApp:
 
     def move_cursor_loop(self):
         """Loop that moves cursor to random positions"""
+        print(f"Cursor movement started with interval: {self.interval} seconds")
+
         while self.running:
             try:
+                # Wait before moving (so first movement happens after interval)
+                time.sleep(self.interval)
+
+                # Check if still running (in case user clicked stop during wait)
+                if not self.running:
+                    break
+
                 # Generate random coordinates
                 x = random.randint(0, self.screen_width - 1)
                 y = random.randint(0, self.screen_height - 1)
+
+                print(f"Moving cursor to: ({x}, {y})")
 
                 # Move cursor to random position
                 pyautogui.moveTo(x, y, duration=0.1)
 
                 print(f"Moved cursor to: ({x}, {y})")
 
-                # Wait before next movement
-                time.sleep(self.interval)
-
             except Exception as e:
                 print(f"Error in cursor movement: {e}")
+                traceback.print_exc()
                 break
 
         print("Cursor movement stopped")
@@ -195,20 +244,22 @@ class CursorMoverApp:
 
 
 def main():
-    # Check if running on macOS and request accessibility permissions
-    if sys.platform == "darwin":
-        try:
-            # Try to move cursor to check permissions
-            x, y = pyautogui.position()
-            pyautogui.moveRel(1, 0)
-            pyautogui.moveRel(-1, 0)
-        except Exception as e:
-            print(f"Accessibility permissions may be needed: {e}")
-            print("Please grant accessibility permissions in System Settings")
+    # Check if running from PyInstaller bundle
+    if getattr(sys, 'frozen', False):
+        print("Running in bundled mode")
+    else:
+        print("Running in development mode")
 
     # Create and run app
     root = Tk()
+
+    # Force app to appear in foreground
+    root.lift()
+    root.attributes('-topmost', True)
+    root.after_idle(lambda: root.attributes('-topmost', False))
+
     app = CursorMoverApp(root)
+
     root.mainloop()
 
 

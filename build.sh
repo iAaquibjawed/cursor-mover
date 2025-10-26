@@ -64,13 +64,9 @@ print_info "Detected platform: $PLATFORM"
 build_macos() {
     print_info "Building for macOS..."
 
-    pyinstaller --name="CursorMover" \
-                --windowed \
-                --onedir \
-                --add-data "README.md:." \
-                --clean \
+    pyinstaller --clean \
                 --noconfirm \
-                cursor_mover.py
+                CursorMover.spec
 
     print_status "macOS build complete: dist/CursorMover.app"
 }

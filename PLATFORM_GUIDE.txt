@@ -1,0 +1,121 @@
+CURSORMOVER - PLATFORM DISTRIBUTION
+=====================================
+
+YOU ALREADY HAVE:
+-----------------
+✅ macOS version: dist/CursorMover-macOS.dmg (25 MB)
+   Ready to share!
+
+
+TO BUILD FOR OTHER PLATFORMS:
+------------------------------
+
+1. LINUX
+--------
+You need a Linux environment (VM, Docker, or remote server):
+
+  Option A: Use Docker
+  docker run --rm -v "$PWD":/src -w /src python:3.13 bash -c "
+    pip install pyinstaller pyautogui pillow numpy &&
+    pyinstaller --clean --noconfirm CursorMover-linux.spec &&
+    tar -czf CursorMover-Linux.tar.gz -C dist CursorMover
+  "
+
+  Option B: On a Linux machine
+  - Install: sudo apt-get install python3-tk xdotool
+  - Build: pyinstaller CursorMover-linux.spec
+  - Package: tar -czf CursorMover-Linux.tar.gz dist/CursorMover
+
+  Output: CursorMover-Linux.tar.gz (~20 MB)
+
+
+2. WINDOWS
+----------
+You need a Windows environment (VM or real machine):
+
+  - Install: pip install pyinstaller pyautogui pillow numpy
+  - Build: pyinstaller CursorMover-windows.spec
+  - Package: Zip the CursorMover.exe file
+
+  Output: CursorMover.exe or CursorMover-Windows.zip (~30 MB)
+
+
+3. AUTOMATED BUILDS (RECOMMENDED)
+----------------------------------
+Set up GitHub Actions to build for all platforms automatically.
+
+  File: .github/workflows/build.yml (see CROSS_PLATFORM_DISTRIBUTION.md)
+
+  Benefits:
+  - Build all platforms automatically
+  - No need for VMs
+  - Artifacts uploaded after each build
+  - Free for public repos
+
+
+WHAT YOU CAN SHARE NOW:
+-----------------------
+✅ macOS: dist/CursorMover-macOS.dmg
+   Users on macOS can download and use this right away!
+
+
+WHAT USERS NEED FOR EACH PLATFORM:
+-----------------------------------
+
+macOS:
+  - macOS 10.14+
+  - Accessibility permission
+  - Download DMG → Install → Run
+
+Linux:
+  - Most modern Linux distros
+  - Python 3.8+ OR the executable
+  - xdotool (sudo apt-get install xdotool)
+  - Extract tar.gz → Run executable
+
+Windows:
+  - Windows 10+
+  - May need to allow in Windows Defender
+  - Extract zip → Run exe
+
+
+FILES TO SHARE:
+---------------
+macOS:   CursorMover-macOS.dmg     (25 MB)
+Linux:   CursorMover-Linux.tar.gz  (20 MB)
+Windows: CursorMover-Windows.zip   (30 MB)
+
+
+RECOMMENDED DISTRIBUTION:
+-------------------------
+1. Upload all three files to GitHub Releases
+2. Or upload to your website/dropbox
+3. Provide download links for each platform
+4. Include installation instructions
+
+
+DOCUMENTATION:
+--------------
+📘 CROSS_PLATFORM_DISTRIBUTION.md - Full guide
+📘 DISTRIBUTION_GUIDE.md - macOS specifics
+📘 HOW_TO_DISTRIBUTE.txt - Quick start
+📘 PLATFORM_GUIDE.txt - This file
+
+
+NEXT STEPS:
+-----------
+1. Share the macOS version you have now ✅
+2. Set up Linux build (use Docker or VM)
+3. Set up Windows build (use VM)
+4. Or: Set up GitHub Actions for all platforms
+5. Upload all files to releases
+6. Share download links with users
+
+
+QUICK BUILD COMMANDS:
+---------------------
+macOS:    ./build.sh && ./create_dmg.sh
+Linux:    docker run ... (see above) OR build on Linux
+Windows:  pyinstaller CursorMover-windows.spec
+All:      Set up GitHub Actions (recommended)
+
