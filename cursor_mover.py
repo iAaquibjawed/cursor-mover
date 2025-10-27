@@ -21,7 +21,7 @@ class CursorMoverApp(rumps.App):
             icon=None,
             quit_button=None
         )
-        self.title = "🖱️"
+        self.title = "→"
 
         # State variables
         self.running = False
@@ -183,11 +183,11 @@ class CursorMoverApp(rumps.App):
             self.status_item.title = "Status: 🟢 Active"
             self.toggle_item.title = "⏸ Stop Movement"
             # Keep icon as 🖱️ always
-            self.title = "🖱️"
+            self.title = "→"
         else:
             self.status_item.title = "Status: 🔴 Inactive"
             self.toggle_item.title = "▶ Start Movement"
-            self.title = "🖱️"
+            self.title = "→"
 
     def move_cursor_loop(self):
         """Background thread that moves cursor at intervals"""
