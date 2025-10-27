@@ -1,268 +1,316 @@
 #!/usr/bin/env python3
 """
-Random Cursor Mover - Desktop Application
-A cross-platform desktop app that moves your cursor to random positions.
+Modern Random Cursor Mover - CustomTkinter Version
+Beautiful macOS-style UI
 """
 
+import customtkinter as ctk
 import pyautogui
 import random
 import time
-import sys
 import threading
-import traceback
-from tkinter import *
-from tkinter import ttk
+import sys
+import subprocess
 from tkinter import messagebox
 
-# Disable PyAutoGUI failsafe (optional)
 pyautogui.FAILSAFE = False
 
 
-class CursorMoverApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Random Cursor Mover")
-        self.root.geometry("400x350")
-        self.root.resizable(False, False)
+class CursorMoverApp(ctk.CTk):
+    def __init__(self):
+        super().__init__()
 
-        # State variables
+        # App window settings
+        self.title("Random Cursor Mover")
+        self.geometry("420x480")
+        self.resizable(False, False)
+
+        # CustomTkinter global appearance
+        ctk.set_appearance_mode("light")  # "light" or "dark"
+        ctk.set_default_color_theme("blue")  # "blue", "green", "dark-blue"
+
+        # App state
         self.running = False
+        self.interval = 120
         self.thread = None
-        self.interval = 120  # Default: 2 minutes
 
-        # Get screen size (try to get it, use fallback if fails)
+        # Get screen size
         try:
             self.screen_width, self.screen_height = pyautogui.size()
-        except Exception as e:
-            print(f"Could not get screen size: {e}")
-            self.screen_width = 1920
-            self.screen_height = 1080
+        except Exception:
+            self.screen_width, self.screen_height = (1920, 1080)
 
-        # Create UI
-        self.create_widgets()
+        # Build UI
+        self.create_ui()
 
-    def create_widgets(self):
-        # Title
-        title_label = Label(self.root, text="Random Cursor Mover",
-                           font=("Arial", 18, "bold"))
-        title_label.pack(pady=15)
+    def create_ui(self):
+        # Header
+        self.icon_label = ctk.CTkLabel(self, text="🖱️", font=("SF Pro Display", 40))
+        self.icon_label.pack(pady=(25, 10))
 
-        # Description
-        desc_label = Label(self.root,
-                          text="Moves cursor to random positions",
-                          font=("Arial", 10))
-        desc_label.pack(pady=5)
+        self.title_label = ctk.CTkLabel(self, text="Cursor Mover",
+                                        font=("SF Pro Display", 26, "bold"))
+        self.title_label.pack(pady=(0, 4))
 
-        # Status frame
-        status_frame = Frame(self.root)
-        status_frame.pack(pady=15)
+        self.subtitle_label = ctk.CTkLabel(self, text="Automatically move your cursor at intervals",
+                                           font=("SF Pro Text", 12), text_color="#666")
+        self.subtitle_label.pack(pady=(0, 25))
 
-        status_label = Label(status_frame, text="Status:", font=("Arial", 11))
-        status_label.pack(side=LEFT, padx=5)
+        # Status Card
+        self.status_frame = ctk.CTkFrame(self, corner_radius=12)
+        self.status_frame.pack(padx=40, pady=(0, 15), fill="x")
 
-        self.status_label = Label(status_frame, text="Inactive",
-                                 font=("Arial", 11), fg="gray")
-        self.status_label.pack(side=LEFT, padx=5)
+        ctk.CTkLabel(self.status_frame, text="Status",
+                     font=("SF Pro Text", 12), text_color="#999").pack(pady=(10, 0))
 
-        # Interval frame
-        interval_frame = Frame(self.root)
-        interval_frame.pack(pady=10)
+        self.status_dot = ctk.CTkLabel(self.status_frame, text="●",
+                                       font=("SF Pro Text", 22), text_color="#AAA")
+        self.status_dot.pack(pady=(4, 0))
 
-        interval_label = Label(interval_frame, text="Interval (seconds):",
-                              font=("Arial", 11))
-        interval_label.pack(side=LEFT, padx=5)
+        self.status_label = ctk.CTkLabel(self.status_frame, text="Inactive",
+                                         font=("SF Pro Display", 15, "bold"),
+                                         text_color="#AAA")
+        self.status_label.pack(pady=(0, 10))
 
-        self.interval_var = StringVar(value="120")
-        interval_entry = Entry(interval_frame, textvariable=self.interval_var,
-                              width=10)
-        interval_entry.pack(side=LEFT, padx=5)
+        # Interval Card
+        self.interval_frame = ctk.CTkFrame(self, corner_radius=12)
+        self.interval_frame.pack(padx=40, pady=10, fill="x")
 
-        # Buttons frame
-        buttons_frame = Frame(self.root)
-        buttons_frame.pack(pady=25)
+        ctk.CTkLabel(self.interval_frame, text="Interval (seconds)",
+                     font=("SF Pro Text", 12), text_color="#999").pack(pady=(10, 5))
 
-        self.start_button = Button(buttons_frame, text="Start",
-                                  command=self.start_movement,
-                                  bg="#4CAF50", fg="white",
-                                  font=("Arial", 12, "bold"),
-                                  width=12, height=2,
-                                  activebackground="#45a049")
-        self.start_button.pack(side=LEFT, padx=10)
+        self.interval_var = ctk.StringVar(value="120")
+        self.interval_entry = ctk.CTkEntry(self.interval_frame, textvariable=self.interval_var,
+                                           justify="center", font=("SF Pro Text", 16))
+        self.interval_entry.pack(padx=40, pady=(5, 15))
 
-        self.stop_button = Button(buttons_frame, text="Stop",
-                                 command=self.stop_movement,
-                                 bg="#f44336", fg="white",
-                                 font=("Arial", 12, "bold"),
-                                 width=12, height=2,
-                                 state=DISABLED,
-                                 activebackground="#da190b")
-        self.stop_button.pack(side=LEFT, padx=10)
+        # Start/Stop Button
+        self.action_button = ctk.CTkButton(self,
+                                           text="Start Movement",
+                                           font=("SF Pro Display", 18, "bold"),
+                                           corner_radius=10,
+                                           height=50,
+                                           fg_color="#007AFF",
+                                           hover_color="#005FCC",
+                                           command=self.toggle_movement)
+        self.action_button.pack(pady=(25, 10), padx=60, fill="x")
 
-        # Info frame
-        info_frame = Frame(self.root)
-        info_frame.pack(pady=10)
+        # Footer
+        ctk.CTkLabel(self, text=f"Screen: {self.screen_width} × {self.screen_height}",
+                     font=("SF Pro Text", 11),
+                     text_color="#888").pack(side="bottom", pady=15)
 
-        screen_info = Label(info_frame,
-                           text=f"Screen: {self.screen_width}x{self.screen_height}",
-                           font=("Arial", 9), fg="gray")
-        screen_info.pack()
-
-        # Handle window closing
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-
+    def toggle_movement(self):
+        if not self.running:
+            self.start_movement()
+        else:
+            self.stop_movement()
 
     def start_movement(self):
-        # Get interval from entry
         try:
-            self.interval = int(self.interval_var.get())
-            if self.interval < 10:
+            interval = int(self.interval_var.get())
+            if interval < 10:
                 messagebox.showerror("Error", "Interval must be at least 10 seconds")
                 return
+            self.interval = interval
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid number")
             return
 
-        if self.running:
-            return
-
-        # CRITICAL: Test if we have accessibility permission
-        # This triggers the permission dialog if not granted
         try:
-            test_pos = pyautogui.position()
-            print(f"Permission OK - Current position: {test_pos}")
-        except Exception as e:
-            print(f"Permission check failed: {e}")
-            # Show instructions and open System Settings
+            _ = pyautogui.position()
+        except Exception:
             self.show_permission_instructions()
             return
 
         self.running = True
-        self.status_label.config(text="Active", fg="green")
-        self.start_button.config(state=DISABLED)
-        self.stop_button.config(state=NORMAL)
-
-        # Start cursor movement in separate thread
+        self.update_ui_state(active=True)
         self.thread = threading.Thread(target=self.move_cursor_loop, daemon=True)
         self.thread.start()
 
-        # Show starting notification
-        self.show_notification("Cursor movement started",
-                              f"Moving every {self.interval} seconds")
-
-    def show_permission_instructions(self):
-        """Show instructions for granting accessibility permission"""
-        instructions = (
-            "Accessibility Permission Required\n\n"
-            "CursorMover needs permission to move your cursor.\n\n"
-            "1. A System Settings window will open\n"
-            "2. In the list, find 'CursorMover' or 'Terminal'\n"
-            "3. Enable the toggle next to it\n"
-            "4. Return here and click 'Start' again\n\n"
-            "Note: The app must appear in the list after you click 'Start'."
-        )
-
-        # Show the instruction dialog
-        result = messagebox.showinfo("Permission Required", instructions)
-
-        # Open System Settings to Accessibility
-        try:
-            import subprocess
-            subprocess.run(["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"])
-            print("Opening System Settings to Accessibility...")
-        except Exception as e:
-            print(f"Could not open System Settings: {e}")
-
     def stop_movement(self):
-        if not self.running:
-            return
-
         self.running = False
-        self.status_label.config(text="Inactive", fg="gray")
-        self.start_button.config(state=NORMAL)
-        self.stop_button.config(state=DISABLED)
+        self.update_ui_state(active=False)
 
-        # Show stopping notification
-        self.show_notification("Cursor movement stopped",
-                              "Cursor will no longer move")
+    def update_ui_state(self, active: bool):
+        if active:
+            self.status_label.configure(text="Active", text_color="#4CAF50")
+            self.status_dot.configure(text_color="#4CAF50")
+            self.action_button.configure(text="Stop Movement",
+                                         fg_color="#FF3B30",
+                                         hover_color="#E62E2E")
+        else:
+            self.status_label.configure(text="Inactive", text_color="#AAA")
+            self.status_dot.configure(text_color="#AAA")
+            self.action_button.configure(text="Start Movement",
+                                         fg_color="#007AFF",
+                                         hover_color="#005FCC")
 
     def move_cursor_loop(self):
-        """Loop that moves cursor to random positions"""
-        print(f"Cursor movement started with interval: {self.interval} seconds")
-
         while self.running:
-            try:
-                # Wait before moving (so first movement happens after interval)
-                time.sleep(self.interval)
-
-                # Check if still running (in case user clicked stop during wait)
-                if not self.running:
-                    break
-
-                # Generate random coordinates
-                x = random.randint(0, self.screen_width - 1)
-                y = random.randint(0, self.screen_height - 1)
-
-                print(f"Moving cursor to: ({x}, {y})")
-
-                # Move cursor to random position
-                pyautogui.moveTo(x, y, duration=0.1)
-
-                print(f"Moved cursor to: ({x}, {y})")
-
-            except Exception as e:
-                print(f"Error in cursor movement: {e}")
-                traceback.print_exc()
+            time.sleep(self.interval)
+            if not self.running:
                 break
+            x = random.randint(0, self.screen_width - 1)
+            y = random.randint(0, self.screen_height - 1)
+            pyautogui.moveTo(x, y, duration=0.2)
 
-        print("Cursor movement stopped")
-
-    def show_notification(self, title, message):
-        """Show system notification"""
+    def show_permission_instructions(self):
+        messagebox.showinfo(
+            "Permission Required",
+            "CursorMover needs Accessibility permission:\n\n"
+            "1. System Settings will open\n"
+            "2. Enable 'Terminal' or 'CursorMover'\n"
+            "3. Retry after enabling access."
+        )
         try:
-            # Try to show native notification
-            if sys.platform == "darwin":  # macOS
-                osascript = f'''osascript -e 'display notification "{message}" with title "{title}"' '''
-                import subprocess
-                subprocess.run(osascript, shell=True)
-            elif sys.platform.startswith("linux"):  # Linux
-                # Try to use notify-send
-                import subprocess
-                subprocess.run(['notify-send', title, message],
-                            stderr=subprocess.DEVNULL)
-            # Windows notifications require additional libraries
-        except Exception as e:
-            print(f"Could not show notification: {e}")
-
-    def on_closing(self):
-        """Handle window closing"""
-        if self.running:
-            self.stop_movement()
-            time.sleep(0.5)  # Give thread time to stop
-
-        self.root.destroy()
-        sys.exit(0)
-
-
-def main():
-    # Check if running from PyInstaller bundle
-    if getattr(sys, 'frozen', False):
-        print("Running in bundled mode")
-    else:
-        print("Running in development mode")
-
-    # Create and run app
-    root = Tk()
-
-    # Force app to appear in foreground
-    root.lift()
-    root.attributes('-topmost', True)
-    root.after_idle(lambda: root.attributes('-topmost', False))
-
-    app = CursorMoverApp(root)
-
-    root.mainloop()
+            subprocess.run(["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"])
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
-    main()
+    app = CursorMoverApp()
+    app.mainloop()
 
+
+
+
+#!/usr/bin/env python3
+# """
+# Random Cursor Mover - macOS Menu Bar App + Modern GUI Panel
+# """
+
+# import rumps
+# import pyautogui
+# import random
+# import threading
+# import time
+# import customtkinter as ctk
+# from tkinter import messagebox
+
+# pyautogui.FAILSAFE = False
+
+
+# # -----------------------------
+# # Modern GUI Window (CustomTkinter)
+# # -----------------------------
+# class CursorMoverGUI(ctk.CTk):
+#     def __init__(self, controller):
+#         super().__init__()
+#         self.controller = controller
+#         self.title("Cursor Mover Control Panel")
+#         self.geometry("400x420")
+#         self.resizable(False, False)
+
+#         ctk.set_appearance_mode("light")
+#         ctk.set_default_color_theme("blue")
+
+#         self.interval = ctk.StringVar(value="120")
+
+#         # Header
+#         ctk.CTkLabel(self, text="🖱️", font=("SF Pro Display", 42)).pack(pady=(20, 10))
+#         ctk.CTkLabel(self, text="Cursor Mover", font=("SF Pro Display", 24, "bold")).pack()
+#         ctk.CTkLabel(self, text="Automatically move your cursor at intervals",
+#                      font=("SF Pro Text", 12), text_color="#666").pack(pady=(0, 20))
+
+#         # Status card
+#         self.status_label = ctk.CTkLabel(self, text="Status: Inactive",
+#                                          font=("SF Pro Display", 14, "bold"), text_color="#999")
+#         self.status_label.pack(pady=(0, 15))
+
+#         # Interval input
+#         ctk.CTkLabel(self, text="Interval (seconds)", font=("SF Pro Text", 12),
+#                      text_color="#888").pack()
+#         self.interval_entry = ctk.CTkEntry(self, textvariable=self.interval,
+#                                            justify="center", font=("SF Pro Text", 16))
+#         self.interval_entry.pack(padx=80, pady=(5, 20))
+
+#         # Start/Stop Button
+#         self.start_button = ctk.CTkButton(self, text="Start Movement",
+#                                           font=("SF Pro Display", 18, "bold"),
+#                                           corner_radius=10, height=45,
+#                                           fg_color="#007AFF", hover_color="#005FCC",
+#                                           command=self.toggle_movement)
+#         self.start_button.pack(pady=(10, 15), padx=80, fill="x")
+
+#         # Close button
+#         ctk.CTkButton(self, text="Close Window", font=("SF Pro Text", 13),
+#                       fg_color="#E0E0E0", text_color="#333",
+#                       hover_color="#CCCCCC", command=self.withdraw).pack(pady=(5, 15))
+
+#     def toggle_movement(self):
+#         if self.controller.running:
+#             self.controller.stop_movement()
+#             self.update_ui(active=False)
+#         else:
+#             try:
+#                 interval = int(self.interval.get())
+#                 if interval < 10:
+#                     messagebox.showerror("Error", "Interval must be at least 10 seconds")
+#                     return
+#                 self.controller.interval = interval
+#                 self.controller.start_movement()
+#                 self.update_ui(active=True)
+#             except ValueError:
+#                 messagebox.showerror("Error", "Please enter a valid number")
+
+#     def update_ui(self, active):
+#         if active:
+#             self.status_label.configure(text="Status: Active", text_color="#4CAF50")
+#             self.start_button.configure(text="Stop Movement",
+#                                         fg_color="#FF3B30", hover_color="#E62E2E")
+#         else:
+#             self.status_label.configure(text="Status: Inactive", text_color="#999")
+#             self.start_button.configure(text="Start Movement",
+#                                         fg_color="#007AFF", hover_color="#005FCC")
+
+
+# # -----------------------------
+# # Menu Bar App Controller (rumps)
+# # -----------------------------
+# class CursorMoverController(rumps.App):
+#     def __init__(self):
+#         super(CursorMoverController, self).__init__("🖱️", title="Cursor Mover")
+#         self.interval = 120
+#         self.running = False
+#         self.thread = None
+#         self.gui = None
+
+#         self.menu = [
+#             rumps.MenuItem("Open Control Panel", callback=self.open_gui),
+#             None,
+#             rumps.MenuItem("Quit", callback=rumps.quit_application)
+#         ]
+
+#     def open_gui(self, sender=None):
+#         if not self.gui:
+#             self.gui = CursorMoverGUI(self)
+#         self.gui.deiconify()
+#         self.gui.lift()
+
+#     def start_movement(self):
+#         if not self.running:
+#             self.running = True
+#             self.thread = threading.Thread(target=self.move_cursor_loop, daemon=True)
+#             self.thread.start()
+#             rumps.notification("Cursor Mover", "Started",
+#                                f"Moving every {self.interval} seconds")
+
+#     def stop_movement(self):
+#         self.running = False
+#         rumps.notification("Cursor Mover", "Stopped", "Cursor movement disabled")
+
+#     def move_cursor_loop(self):
+#         while self.running:
+#             time.sleep(self.interval)
+#             if not self.running:
+#                 break
+#             x = random.randint(0, pyautogui.size().width - 1)
+#             y = random.randint(0, pyautogui.size().height - 1)
+#             pyautogui.moveTo(x, y, duration=0.2)
+
+
+# if __name__ == "__main__":
+#     app = CursorMoverController()
+#     app.run()
