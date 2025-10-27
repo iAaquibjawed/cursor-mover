@@ -1,174 +1,226 @@
 #!/usr/bin/env python3
 """
-Modern Random Cursor Mover - CustomTkinter Version
-Beautiful macOS-style UI
+macOS Menu Bar Random Cursor Mover
+A native status bar application using rumps
 """
 
-import customtkinter as ctk
+import rumps
 import pyautogui
 import random
-import time
 import threading
-import sys
+import time
 import subprocess
-from tkinter import messagebox
 
 pyautogui.FAILSAFE = False
 
 
-class CursorMoverApp(ctk.CTk):
+class CursorMoverApp(rumps.App):
     def __init__(self):
-        super().__init__()
+        super(CursorMoverApp, self).__init__(
+            "Cursor Mover",
+            icon=None,
+            quit_button=None
+        )
+        self.title = "🖱️"
 
-        # App window settings
-        self.title("Random Cursor Mover")
-        self.geometry("420x480")
-        self.resizable(False, False)
-
-        # CustomTkinter global appearance
-        ctk.set_appearance_mode("light")  # "light" or "dark"
-        ctk.set_default_color_theme("blue")  # "blue", "green", "dark-blue"
-
-        # App state
+        # State variables
         self.running = False
-        self.interval = 120
+        self.interval = 11
         self.thread = None
+        self.movement_lock = threading.Lock()
 
-        # Get screen size
         try:
             self.screen_width, self.screen_height = pyautogui.size()
         except Exception:
             self.screen_width, self.screen_height = (1920, 1080)
 
-        # Build UI
-        self.create_ui()
+        # Build menu with keyboard shortcuts
+        self.menu = [
+            rumps.MenuItem("Status: 🔴 Inactive", callback=None),
+            rumps.separator,
+            rumps.MenuItem(f"Current Interval: {self.interval}s", callback=None),
+            rumps.MenuItem("⚙️ Change Interval...", callback=self.set_interval, key='i'),
+            rumps.separator,
+            rumps.MenuItem("Start Movement", callback=self.toggle_movement, key='s'),
+            rumps.separator,
+            rumps.MenuItem(f"Screen: {self.screen_width}×{self.screen_height}", callback=None),
+            rumps.separator,
+            rumps.MenuItem("Quit", callback=self.quit_app, key='q')
+        ]
 
-    def create_ui(self):
-        # Header
-        self.icon_label = ctk.CTkLabel(self, text="🖱️", font=("SF Pro Display", 40))
-        self.icon_label.pack(pady=(25, 10))
+        self.status_item = self.menu["Status: 🔴 Inactive"]
+        self.interval_display = self.menu[f"Current Interval: {self.interval}s"]
+        self.interval_button = self.menu["⚙️ Change Interval..."]
+        self.toggle_item = self.menu["Start Movement"]
+        self.screen_item = self.menu[f"Screen: {self.screen_width}×{self.screen_height}"]
 
-        self.title_label = ctk.CTkLabel(self, text="Cursor Mover",
-                                        font=("SF Pro Display", 26, "bold"))
-        self.title_label.pack(pady=(0, 4))
+    def set_interval(self, sender):
+        """Open dialog to set movement interval using AppleScript"""
+        def show_dialog():
+            try:
+                # Use AppleScript to show a text input dialog and get the result
+                script = f'''
+                set userResponse to display dialog "Enter interval in seconds (minimum 10):" & return & return default answer "{self.interval}" with title "Set Interval" buttons {{"Cancel", "Set"}} default button 2
+                set buttonPressed to button returned of userResponse
+                set textEntered to text returned of userResponse
+                return buttonPressed & "|||" & textEntered
+                '''
+                result = subprocess.run(
+                    ['osascript', '-e', script],
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
 
-        self.subtitle_label = ctk.CTkLabel(self, text="Automatically move your cursor at intervals",
-                                           font=("SF Pro Text", 12), text_color="#666")
-        self.subtitle_label.pack(pady=(0, 25))
+                if result.returncode == 0:
+                    # Parse the result
+                    output = result.stdout.strip()
+                    if "|||" in output:
+                        button, text = output.split("|||", 1)
+                        if button.strip() == "Set":
+                            try:
+                                new_interval = int(text.strip())
+                                if new_interval < 10:
+                                    # Show error using alert
+                                    error_script = 'display dialog "Interval must be at least 10 seconds." buttons {{"OK"}} default button 1 with title "Invalid Interval"'
+                                    subprocess.run(['osascript', '-e', error_script], check=False)
+                                    return
 
-        # Status Card
-        self.status_frame = ctk.CTkFrame(self, corner_radius=12)
-        self.status_frame.pack(padx=40, pady=(0, 15), fill="x")
+                                if new_interval != self.interval:
+                                    old_interval = self.interval
+                                    self.interval = new_interval
+                                    self.interval_display.title = f"Current Interval: {self.interval}s"
 
-        ctk.CTkLabel(self.status_frame, text="Status",
-                     font=("SF Pro Text", 12), text_color="#999").pack(pady=(10, 0))
+                                    self.safe_notification(
+                                        title="Cursor Mover",
+                                        subtitle="Interval Updated",
+                                        message=f"Changed from {old_interval}s to {self.interval}s"
+                                    )
+                            except ValueError:
+                                # Show error using alert
+                                error_script = 'display dialog "Please enter a valid number." buttons {{"OK"}} default button 1 with title "Invalid Input"'
+                                subprocess.run(['osascript', '-e', error_script], check=False)
+            except subprocess.TimeoutExpired:
+                pass  # User didn't respond
+            except Exception as e:
+                print(f"Dialog error: {e}")
 
-        self.status_dot = ctk.CTkLabel(self.status_frame, text="●",
-                                       font=("SF Pro Text", 22), text_color="#AAA")
-        self.status_dot.pack(pady=(4, 0))
+        # Run dialog without blocking
+        dialog_thread = threading.Thread(target=show_dialog, daemon=True)
+        dialog_thread.start()
 
-        self.status_label = ctk.CTkLabel(self.status_frame, text="Inactive",
-                                         font=("SF Pro Display", 15, "bold"),
-                                         text_color="#AAA")
-        self.status_label.pack(pady=(0, 10))
+    def safe_notification(self, title, subtitle, message):
+        """Send notification using native macOS notification system"""
+        # First try rumps notification
+        try:
+            rumps.notification(title=title, subtitle=subtitle, message=message)
+        except RuntimeError:
+            # If that fails, use AppleScript for native notifications
+            script = f'''
+            display notification "{message}" with title "{title}" subtitle "{subtitle}"
+            '''
+            try:
+                subprocess.run(['osascript', '-e', script], check=False, capture_output=True)
+            except Exception:
+                print(f"[Notification] {title}: {subtitle} - {message}")
 
-        # Interval Card
-        self.interval_frame = ctk.CTkFrame(self, corner_radius=12)
-        self.interval_frame.pack(padx=40, pady=10, fill="x")
-
-        ctk.CTkLabel(self.interval_frame, text="Interval (seconds)",
-                     font=("SF Pro Text", 12), text_color="#999").pack(pady=(10, 5))
-
-        self.interval_var = ctk.StringVar(value="120")
-        self.interval_entry = ctk.CTkEntry(self.interval_frame, textvariable=self.interval_var,
-                                           justify="center", font=("SF Pro Text", 16))
-        self.interval_entry.pack(padx=40, pady=(5, 15))
-
-        # Start/Stop Button
-        self.action_button = ctk.CTkButton(self,
-                                           text="Start Movement",
-                                           font=("SF Pro Display", 18, "bold"),
-                                           corner_radius=10,
-                                           height=50,
-                                           fg_color="#007AFF",
-                                           hover_color="#005FCC",
-                                           command=self.toggle_movement)
-        self.action_button.pack(pady=(25, 10), padx=60, fill="x")
-
-        # Footer
-        ctk.CTkLabel(self, text=f"Screen: {self.screen_width} × {self.screen_height}",
-                     font=("SF Pro Text", 11),
-                     text_color="#888").pack(side="bottom", pady=15)
-
-    def toggle_movement(self):
+    def toggle_movement(self, sender):
+        """Start or stop cursor movement"""
         if not self.running:
             self.start_movement()
         else:
             self.stop_movement()
 
     def start_movement(self):
-        try:
-            interval = int(self.interval_var.get())
-            if interval < 10:
-                messagebox.showerror("Error", "Interval must be at least 10 seconds")
-                return
-            self.interval = interval
-        except ValueError:
-            messagebox.showerror("Error", "Please enter a valid number")
-            return
-
+        """Start the cursor movement loop"""
+        # Check if we have accessibility permissions
         try:
             _ = pyautogui.position()
         except Exception:
-            self.show_permission_instructions()
+            rumps.alert(
+                "Permission Required",
+                "Cursor Mover needs Accessibility permission.\n\n"
+                "Go to: System Settings → Privacy & Security → Accessibility\n"
+                "Enable 'Python' or your terminal application."
+            )
             return
 
-        self.running = True
-        self.update_ui_state(active=True)
-        self.thread = threading.Thread(target=self.move_cursor_loop, daemon=True)
-        self.thread.start()
+        with self.movement_lock:
+            if self.running:
+                return
+
+            self.running = True
+            self.update_ui_state(active=True)
+
+            # Start movement thread
+            self.thread = threading.Thread(target=self.move_cursor_loop, daemon=True)
+            self.thread.start()
+
+            self.safe_notification(
+                title="Cursor Mover",
+                subtitle="Movement Started",
+                message=f"Moving cursor every {self.interval} seconds"
+            )
 
     def stop_movement(self):
-        self.running = False
-        self.update_ui_state(active=False)
+        """Stop the cursor movement loop"""
+        with self.movement_lock:
+            if not self.running:
+                return
+
+            self.running = False
+            self.update_ui_state(active=False)
+
+            self.safe_notification(
+                title="Cursor Mover",
+                subtitle="Movement Stopped",
+                message="Cursor movement has been stopped"
+            )
 
     def update_ui_state(self, active: bool):
+        """Update menu items based on active state"""
         if active:
-            self.status_label.configure(text="Active", text_color="#4CAF50")
-            self.status_dot.configure(text_color="#4CAF50")
-            self.action_button.configure(text="Stop Movement",
-                                         fg_color="#FF3B30",
-                                         hover_color="#E62E2E")
+            self.status_item.title = "Status: 🟢 Active"
+            self.toggle_item.title = "⏸ Stop Movement"
+            # Keep icon as 🖱️ always
+            self.title = "🖱️"
         else:
-            self.status_label.configure(text="Inactive", text_color="#AAA")
-            self.status_dot.configure(text_color="#AAA")
-            self.action_button.configure(text="Start Movement",
-                                         fg_color="#007AFF",
-                                         hover_color="#005FCC")
+            self.status_item.title = "Status: 🔴 Inactive"
+            self.toggle_item.title = "▶ Start Movement"
+            self.title = "🖱️"
 
     def move_cursor_loop(self):
-        while self.running:
-            time.sleep(self.interval)
-            if not self.running:
-                break
-            x = random.randint(0, self.screen_width - 1)
-            y = random.randint(0, self.screen_height - 1)
-            pyautogui.moveTo(x, y, duration=0.2)
+        """Background thread that moves cursor at intervals"""
+        next_move_time = time.time() + self.interval
 
-    def show_permission_instructions(self):
-        messagebox.showinfo(
-            "Permission Required",
-            "CursorMover needs Accessibility permission:\n\n"
-            "1. System Settings will open\n"
-            "2. Enable 'Terminal' or 'CursorMover'\n"
-            "3. Retry after enabling access."
-        )
-        try:
-            subprocess.run(["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"])
-        except Exception:
-            pass
+        while self.running:
+            current_time = time.time()
+
+            if current_time >= next_move_time:
+                # Time to move cursor
+                x = random.randint(0, self.screen_width - 1)
+                y = random.randint(0, self.screen_height - 1)
+
+                try:
+                    pyautogui.moveTo(x, y, duration=0.25)
+                    next_move_time = time.time() + self.interval
+                except Exception as e:
+                    print(f"Error moving cursor: {e}")
+                    self.running = False
+                    self.update_ui_state(active=False)
+                    rumps.alert("Error", f"Failed to move cursor: {e}")
+                    break
+
+            # Sleep in small increments to check running flag frequently
+            time.sleep(0.5)
+
+    def quit_app(self, sender):
+        """Clean quit handler"""
+        if self.running:
+            self.stop_movement()
+        rumps.quit_application()
 
 
 if __name__ == "__main__":
     app = CursorMoverApp()
-    app.mainloop()
+    app.run()
