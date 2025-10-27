@@ -2,7 +2,7 @@
 
 ## Current Status
 
-This app is **macOS-only** (uses native macOS menu bar via `rumps`). 
+This app is **macOS-only** (uses native macOS menu bar via `rumps`).
 
 ## Distribution Options
 

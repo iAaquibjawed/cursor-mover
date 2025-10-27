@@ -1,78 +1,128 @@
-# Cursor Mover - macOS Menu Bar App
+# Cursor Mover - Cross-Platform Desktop App
 
-A macOS menu bar application that automatically moves your cursor to random positions on the screen at specified intervals. Perfect for keeping your computer active!
+A desktop application that automatically moves your cursor to random positions on the screen at specified intervals. Perfect for keeping your computer active!
 
-## Features
+## 📦 Versions
 
+This repository contains two versions:
+
+### 1. macOS Version (Native Menu Bar)
+
+**File:** `cursor_mover.py`
+
+**Features:**
 - 📍 Moves cursor to random screen positions automatically
 - ⚙️ Configurable interval (minimum 10 seconds)
 - 🔔 Native macOS notifications
-- 🎨 Clean menu bar interface with status indicators
-- 🔐 Requires Accessibility permission
+- 🎨 Native menu bar interface with → icon
+- ⌨️ Keyboard shortcuts (s, i, q)
+- 🟢 Status indicators (Active/Inactive)
 
-## Installation
-
-### Requirements
-- macOS
-- Python 3.8+
-- Accessibility permission
-
-### Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/cursor-mover.git
-cd cursor-mover
-```
-
-2. Install dependencies:
+**Installation:**
 ```bash
 pip install -r requirements.txt
-```
-
-3. Run the app:
-```bash
 python cursor_mover.py
 ```
 
-## Usage
-
-1. Start the app - it will appear in your menu bar with a → icon
-2. Grant Accessibility permission when prompted
-3. Right-click the menu bar icon to:
-   - View current status
-   - Change interval (default: 11 seconds)
-   - Start/Stop cursor movement
-   - View screen resolution
-   - Quit
-
-### Keyboard Shortcuts
-
-- `s` - Start/Stop movement
-- `i` - Change interval
-- `q` - Quit
-
-## Building a Standalone App
-
-To create a macOS app bundle:
-
+**Build:**
 ```bash
 ./build.sh
-```
-
-The app will be created in `dist/CursorMover.app`
-
-To create a DMG installer:
-
-```bash
 ./create_dmg.sh
 ```
 
+### 2. Windows/Linux Version (GUI)
+
+**File:** `cursor_mover_gui.py`
+
+**Features:**
+- 📍 Moves cursor to random screen positions automatically
+- ⚙️ Configurable interval (minimum 10 seconds)
+- 🖱️ Simple GUI window with Start/Stop buttons
+- 💻 Works on Windows and Linux
+
+**Installation:**
+```bash
+pip install -r requirements-gui.txt
+python cursor_mover_gui.py
+```
+
+## Requirements
+
+- Python 3.8+
+- Accessibility/Input permission
+
+## Usage
+
+### macOS Version
+
+1. Run: `python cursor_mover.py`
+2. Look for → icon in menu bar
+3. Right-click to access menu:
+   - View status (🟢 Active / 🔴 Inactive)
+   - Change interval
+   - Start/Stop movement
+   - View screen resolution
+   - Quit
+
+**Keyboard Shortcuts:**
+- `s` - Start/Stop
+- `i` - Change interval
+- `q` - Quit
+
+### Windows/Linux Version
+
+1. Run: `python cursor_mover_gui.py`
+2. A window will open
+3. Enter interval (minimum 10 seconds)
+4. Click "Start Movement"
+5. Click "Stop" to stop or "Quit" to exit
+
+## Building Executables
+
+### macOS App Bundle
+
+```bash
+./build.sh
+./create_dmg.sh
+```
+
+Result: `dist/CursorMover-macOS.dmg`
+
+### Windows Executable
+
+```bash
+pyinstaller --name="CursorMover-Windows" --windowed --onefile cursor_mover_gui.py
+```
+
+Result: `dist/CursorMover-Windows.exe`
+
+### Linux Executable
+
+```bash
+pyinstaller --name="CursorMover-Linux" --windowed --onefile cursor_mover_gui.py
+chmod +x dist/CursorMover-Linux
+```
+
+Result: `dist/CursorMover-Linux`
+
 ## Permissions
 
-Cursor Mover needs Accessibility permission to control your cursor:
-1. Go to: **System Settings** → **Privacy & Security** → **Accessibility**
-2. Enable your terminal application (Terminal, iTerm2, etc.)
+### macOS
+Go to: **System Settings** → **Privacy & Security** → **Accessibility**
+Enable: Terminal, iTerm2, or your terminal application
+
+### Windows
+May require admin access for cursor control
+
+### Linux
+May require input permission configuration
+
+## Distribution
+
+Upload builds to GitHub Releases:
+- `CursorMover-macOS.dmg` for macOS
+- `CursorMover-Windows.exe` for Windows
+- `CursorMover-Linux` for Linux
 
 ## License
 
