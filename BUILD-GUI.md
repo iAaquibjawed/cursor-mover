@@ -4,7 +4,7 @@ This repo contains two versions:
 
 ## 1. macOS Version (Native Menu Bar)
 
-**File:** `cursor_mover.py`  
+**File:** `cursor_mover.py`
 **Dependencies:** `requirements.txt` (includes rumps)
 
 **Features:**
@@ -19,7 +19,7 @@ This repo contains two versions:
 
 ## 2. Windows/Linux Version (GUI)
 
-**File:** `cursor_mover_gui.py`  
+**File:** `cursor_mover_gui.py`
 **Dependencies:** `requirements-gui.txt` (no rumps)
 
 **Features:**
