@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata. Flathub requires this file, and it is what the graphical
+     app stores (GNOME Software, KDE Discover) display. Validate with:
+         flatpak run org.freedesktop.appstream-glib validate <this file>
+-->
+<component type="desktop-application">
+  <id>io.github.iaaquibjawed.CursorMover</id>
+
+  <name>Cursor Mover</name>
+  <summary>Keep your computer awake by nudging the cursor</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <developer id="io.github.iaaquibjawed">
+    <name>Md Aaquib Jawed</name>
+  </developer>
+
+  <description>
+    <p>
+      Cursor Mover is a small tray application that moves the mouse pointer to a
+      random position on a timer, so your machine never registers as idle. No
+      window, no taskbar entry — just an icon you click for a menu.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Moves the cursor to a random screen position on a fixed interval</li>
+      <li>Configurable interval from 10 seconds to 1 hour, remembered between launches</li>
+      <li>Desktop notifications when movement starts and stops</li>
+      <li>Runs in the background with no window of its own</li>
+    </ul>
+    <p>
+      Requires an X11 session. Wayland does not permit applications to move the
+      pointer, so Cursor Mover cannot work under Wayland.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.iaaquibjawed.CursorMover.desktop</launchable>
+
+  <!-- Flathub requires at least one screenshot. Replace the URL below with a
+       real capture committed to the repository before submitting. -->
+  <screenshots>
+    <screenshot type="default">
+      <caption>The tray menu, showing status and interval</caption>
+      <image>https://raw.githubusercontent.com/iAaquibjawed/cursor-mover/master/docs/screenshot.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/iAaquibjawed/cursor-mover</url>
+  <url type="bugtracker">https://github.com/iAaquibjawed/cursor-mover/issues</url>
+  <url type="vcs-browser">https://github.com/iAaquibjawed/cursor-mover</url>
+
+  <categories>
+    <category>Utility</category>
+  </categories>
+
+  <keywords>
+    <keyword>cursor</keyword>
+    <keyword>mouse</keyword>
+    <keyword>idle</keyword>
+    <keyword>awake</keyword>
+    <keyword>jiggler</keyword>
+  </keywords>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="2.0.0" date="2026-08-31">
+      <description>
+        <p>Adds Windows and Linux support alongside macOS, sharing one tested core.</p>
+      </description>
+    </release>
+  </releases>
+</component>

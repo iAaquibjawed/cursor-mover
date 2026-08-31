@@ -4,9 +4,11 @@ Two implementations satisfy the :class:`SystemUI` protocol:
 
 * :mod:`~cursor_mover.systemui.applescript` shells out to ``osascript`` on
   macOS, giving genuinely native dialogs and Notification Center banners.
-* :mod:`~cursor_mover.systemui.tk` uses Tkinter from the standard library on
-  Windows and Linux, with notifications routed through the tray icon or
-  ``notify-send``.
+* :mod:`~cursor_mover.systemui.gtk` uses GTK 3 via PyGObject. Preferred on
+  Linux, because GTK is already present wherever a tray is and the Flatpak
+  runtime ships GTK but no Tkinter.
+* :mod:`~cursor_mover.systemui.tk` uses Tkinter from the standard library. Used
+  on Windows, and on Linux when GTK is unavailable.
 
 Nothing in this package imports a GUI toolkit at module scope, so importing it
 is safe in a headless test run.
@@ -62,6 +64,16 @@ def create_system_ui(
         from cursor_mover.systemui.applescript import AppleScriptUI
 
         return AppleScriptUI()
+
+    # On Linux, GTK is the better fit: it is already installed wherever a system
+    # tray is running, and it is the only option inside the Flatpak runtime,
+    # which ships no Tkinter.
+    if not plat.startswith("win"):
+        from cursor_mover.systemui.gtk import GtkUI, gtk_is_available
+
+        if gtk_is_available():
+            return GtkUI(notifier=notifier)
+        logger.info("GTK unavailable; falling back to Tkinter dialogs.")
 
     from cursor_mover.systemui.tk import TkUI
 

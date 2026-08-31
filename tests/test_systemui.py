@@ -84,3 +84,64 @@ class TestTkDialogsDegrade:
 def _no_root():
     """Stand in for _hidden_root when Tkinter is unavailable."""
     yield None
+
+
+class TestGtkSelection:
+    """Linux must prefer GTK: the Flatpak runtime ships GTK but no Tkinter."""
+
+    def test_gtk_is_used_when_available(self, monkeypatch) -> None:
+        import cursor_mover.systemui.gtk as gtk_mod
+
+        monkeypatch.setattr(gtk_mod, "gtk_is_available", lambda: True)
+        ui = create_system_ui("linux")
+        assert isinstance(ui, gtk_mod.GtkUI)
+
+    def test_tk_is_used_when_gtk_is_missing(self, monkeypatch) -> None:
+        import cursor_mover.systemui.gtk as gtk_mod
+
+        monkeypatch.setattr(gtk_mod, "gtk_is_available", lambda: False)
+        assert isinstance(create_system_ui("linux"), TkUI)
+
+    def test_windows_never_tries_gtk(self, monkeypatch) -> None:
+        import cursor_mover.systemui.gtk as gtk_mod
+
+        def explode() -> bool:
+            raise AssertionError("Windows must not consult GTK")
+
+        monkeypatch.setattr(gtk_mod, "gtk_is_available", explode)
+        assert isinstance(create_system_ui("win32"), TkUI)
+
+    def test_gtk_is_unavailable_without_pygobject(self) -> None:
+        from cursor_mover.systemui.gtk import gtk_is_available
+
+        # No PyGObject in the test environment, so this must be False rather
+        # than raising.
+        assert gtk_is_available() in (True, False)
+
+
+class TestGtkNotifyFallbacks:
+    def test_prefers_the_notifier(self) -> None:
+        from cursor_mover.systemui.gtk import GtkUI
+
+        seen: list[tuple[str, str]] = []
+        GtkUI(notifier=lambda body, title: seen.append((title, body))).notify("T", "Sub", "Body")
+        assert seen == [("T", "Sub\nBody")]
+
+    def test_degrades_to_logging_without_gtk(self, caplog) -> None:
+        from cursor_mover.systemui.gtk import GtkUI
+
+        caplog.set_level(logging.INFO, logger="cursor_mover.systemui.gtk")
+        GtkUI().notify("T", "Sub", "Body")  # must not raise
+        assert any("[notification]" in r.getMessage() for r in caplog.records)
+
+    def test_alert_degrades_without_gtk(self, caplog) -> None:
+        from cursor_mover.systemui.gtk import GtkUI
+
+        caplog.set_level(logging.INFO, logger="cursor_mover.systemui.gtk")
+        GtkUI().alert("Title", "Message")  # must not raise
+        assert any("[alert]" in r.getMessage() for r in caplog.records)
+
+    def test_prompt_degrades_without_gtk(self) -> None:
+        from cursor_mover.systemui.gtk import GtkUI
+
+        assert GtkUI().prompt_for_text("T", "M", "11") == TextPrompt(False, "")

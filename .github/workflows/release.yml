@@ -62,11 +62,15 @@ jobs:
           - os: windows-latest
             label: Windows
             command: pwsh -File packaging/build_windows.ps1
-            artifact: dist/CursorMover-Windows.zip
+            artifact: |
+              dist/CursorMover-Windows.zip
+              dist/CursorMover.exe
           - os: ubuntu-latest
             label: Linux
-            command: ./packaging/build_linux.sh
-            artifact: dist/CursorMover-Linux-x86_64.tar.gz
+            command: ./packaging/build_linux.sh && ./packaging/build_deb.sh
+            artifact: |
+              dist/CursorMover-Linux-x86_64.tar.gz
+              dist/*.deb
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -82,7 +86,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             python3-tk libgirepository1.0-dev libcairo2-dev \
-            gir1.2-ayatanaappindicator3-0.1 scrot
+            gir1.2-ayatanaappindicator3-0.1 scrot dpkg-dev lintian
 
       - name: Install
         run: pip install -e ".[build]"
@@ -95,6 +99,62 @@ jobs:
         with:
           name: release-${{ matrix.label }}
           path: ${{ matrix.artifact }}
+
+  apt-repo:
+    name: Publish APT repository
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends dpkg-dev apt-utils
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-Linux
+          path: dist
+
+      - name: Import the signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "::error::GPG_PRIVATE_KEY secret is not set. See docs/RELEASING.md."
+            exit 1
+          fi
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "GPG_KEY_ID=$(gpg --list-secret-keys --with-colons \
+            | awk -F: '/^sec:/ {print $5; exit}')" >> "$GITHUB_ENV"
+
+      - name: Build the signed repository
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: ./packaging/build_apt_repo.sh
+
+      - name: Add a landing page
+        run: |
+          VERSION="$(python3 -c "import re,pathlib;\
+            print(re.search(r'__version__ = \"([^\"]+)\"',\
+            pathlib.Path('src/cursor_mover/__init__.py').read_text()).group(1))")"
+          sed "s/__VERSION__/$VERSION/g" packaging/apt-index.html > dist/apt/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/apt
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
 
   publish:
     needs: build

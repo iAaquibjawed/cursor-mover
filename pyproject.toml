@@ -83,4 +83,6 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "BLE", "RUF"]
 "src/cursor_mover/frontend/menubar.py" = ["RUF001", "RUF003"]
 "src/cursor_mover/controller.py" = ["RUF001"]
 "src/cursor_mover/systemui/applescript.py" = ["RUF001", "RUF002"]
+# `Gtk` is PyGObject's conventional module alias, not a stray capital.
+"src/cursor_mover/systemui/gtk.py" = ["N806"]
 "tests/*" = ["N802", "SLF001"]

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Cursor Mover
+GenericName=Idle Preventer
+Comment=Keep your computer awake by nudging the cursor to a random position
+Exec=cursor-mover
+Icon=io.github.iaaquibjawed.CursorMover
+Terminal=false
+Categories=Utility;
+Keywords=cursor;mouse;idle;awake;jiggler;
+StartupNotify=false

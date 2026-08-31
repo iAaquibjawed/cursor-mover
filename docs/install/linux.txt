@@ -19,8 +19,32 @@ REQUIREMENTS
         Arch            sudo pacman -S tk
     (Only needed when running from source; the bundled binary includes it.)
 
-INSTALL
-  From this tarball, for the current user only, no root required:
+INSTALL -- OPTION A: apt (recommended)
+  Add the signed repository once, then install and update like any other
+  package:
+
+      sudo install -d -m 0755 /etc/apt/keyrings
+
+      curl -fsSL https://iaaquibjawed.github.io/cursor-mover/cursor-mover.asc \
+        | sudo tee /etc/apt/keyrings/cursor-mover.asc > /dev/null
+
+      echo "deb [signed-by=/etc/apt/keyrings/cursor-mover.asc] \
+      https://iaaquibjawed.github.io/cursor-mover ./" \
+        | sudo tee /etc/apt/sources.list.d/cursor-mover.list > /dev/null
+
+      sudo apt update
+      sudo apt install cursor-mover
+
+  Update:  sudo apt update && sudo apt upgrade cursor-mover
+  Remove:  sudo apt remove cursor-mover
+
+INSTALL -- OPTION B: a single .deb
+  Download the .deb from the Releases page. apt still resolves dependencies:
+
+      sudo apt install ./cursor-mover_2.0.0-1_amd64.deb
+
+INSTALL -- OPTION C: this tarball (any distro, no root)
+  For the current user only:
       ./install.sh
 
   That places:

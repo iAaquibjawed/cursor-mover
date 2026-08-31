@@ -1,5 +1,9 @@
 # Releasing
 
+> [!IMPORTANT]
+> The APT repository needs a one-time GPG setup before the first release.
+> See [One-time setup: APT signing key](#one-time-setup-apt-signing-key) below.
+
 ## 1. Prepare
 
 - [ ] Update the version in `src/cursor_mover/__init__.py` and
@@ -73,3 +77,81 @@ If a build fails, fix it and re-run the workflow manually from the Actions tab
   warning on first launch.
 - Linux requires an X11 / Xorg session; Wayland forbids pointer control.
 - The Linux build is x86_64 only.
+
+
+---
+
+## One-time setup: APT signing key
+
+`apt` refuses an unsigned repository, so the `apt-repo` job needs a GPG key.
+Do this once; every later release reuses it.
+
+### 1. Generate a key
+
+Use a dedicated key for package signing, not your personal one.
+
+```bash
+gpg --batch --quick-generate-key \
+    "Cursor Mover Packaging <mallickaaquib@gmail.com>" \
+    rsa4096 sign never
+```
+
+Note the key id:
+
+```bash
+gpg --list-secret-keys --keyid-format=long
+```
+
+### 2. Back it up somewhere safe
+
+If you lose this key you cannot publish updates that existing users will
+accept — they would have to re-add a new key by hand.
+
+```bash
+gpg --armor --export-secret-keys <KEY_ID> > cursor-mover-signing-key.asc
+```
+
+Store that file in a password manager, then delete it from disk.
+
+### 3. Add it to GitHub
+
+**Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret | Value |
+| --- | --- |
+| `GPG_PRIVATE_KEY` | the full contents of `cursor-mover-signing-key.asc` |
+| `GPG_PASSPHRASE` | the key's passphrase, or omit if it has none |
+
+### 4. Enable GitHub Pages
+
+**Settings → Pages → Build and deployment → Source: GitHub Actions**
+
+The repository is then served at
+`https://iaaquibjawed.github.io/cursor-mover/`.
+
+### 5. Verify after the first release
+
+On a Debian or Ubuntu machine:
+
+```bash
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://iaaquibjawed.github.io/cursor-mover/cursor-mover.asc \
+  | sudo tee /etc/apt/keyrings/cursor-mover.asc > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/cursor-mover.asc] https://iaaquibjawed.github.io/cursor-mover ./" \
+  | sudo tee /etc/apt/sources.list.d/cursor-mover.list > /dev/null
+
+sudo apt update            # must not report a signature warning
+apt policy cursor-mover    # should list the new version
+sudo apt install cursor-mover
+```
+
+### Notes and limits
+
+- The published repository holds **only the most recent** `.deb`. `apt upgrade`
+  works because versions increase, but older versions are not installable via
+  apt — they remain on the Releases page.
+- The repository is **flat** (`... ./`), which is why the client line has no
+  distribution or component. That is intentional: it needs no `dists/` tree and
+  works across Debian, Ubuntu, and derivatives.
+- Rebuilding locally: `make apt` produces `dist/apt/` using whatever secret key
+  your gpg agent holds.

@@ -5,7 +5,7 @@
 # artifact must be built on its own OS.
 
 .DEFAULT_GOAL := help
-.PHONY: help install run test lint format check icon icons app dmg linux windows clean
+.PHONY: help install run test lint format check icon icons app dmg linux deb apt flatpak windows clean
 
 PYTHON ?= python3
 
@@ -47,6 +47,16 @@ dmg: app ## macOS: build dist/CursorMover-macOS.dmg
 
 linux: ## Linux: build dist/cursor-mover and the tarball
 	./packaging/build_linux.sh
+
+deb: ## Linux: build the .deb package
+	./packaging/build_deb.sh
+
+apt: deb ## Linux: build the signed APT repository in dist/apt
+	./packaging/build_apt_repo.sh
+
+flatpak: ## Linux: build and install the Flatpak locally
+	flatpak-builder --user --install --force-clean build \
+		packaging/flatpak/io.github.iaaquibjawed.CursorMover.yml
 
 windows: ## Windows: build dist/CursorMover.exe and the zip (run in PowerShell)
 	@echo "Run this in PowerShell instead: .\\packaging\\build_windows.ps1"
