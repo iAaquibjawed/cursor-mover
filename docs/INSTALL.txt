@@ -1,0 +1,29 @@
+Cursor Mover for macOS
+======================
+
+INSTALL
+  1. Drag CursorMover.app into the Applications folder.
+  2. Launch it. A "→" appears in the menu bar; there is no Dock icon.
+  3. The first time you press Start, macOS asks for Accessibility access.
+
+GRANT ACCESSIBILITY PERMISSION
+  System Settings → Privacy & Security → Accessibility → enable "CursorMover".
+  Relaunch the app after granting it.
+
+USE
+  Click the "→" in the menu bar:
+    ▶ Start Movement  (s)   begin moving the cursor
+    ⚙️ Change Interval (i)   set how often it moves (10-3600 seconds)
+    Quit              (q)   stop and exit
+
+  Your interval is remembered between launches.
+
+UNSIGNED BUILD
+  If macOS reports the app "cannot be opened", right-click CursorMover.app and
+  choose Open, then confirm. This is only needed once.
+
+TROUBLESHOOTING
+  Cursor does not move -> confirm CursorMover is ticked under Accessibility,
+  then quit and relaunch the app.
+
+Source and issues: https://github.com/iAaquibjawed/cursor-mover

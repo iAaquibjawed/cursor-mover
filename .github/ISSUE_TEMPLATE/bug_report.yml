@@ -1,0 +1,71 @@
+name: Bug report
+description: Something in Cursor Mover does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Cursor Mover is macOS-only — if you are on
+        Windows or Linux, see the Platform support section of the README.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Launch Cursor Mover
+        2. Click Change Interval and enter 30
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: How did you install it?
+      options:
+        - DMG from a release
+        - From source (pip install -e .)
+        - Built the app myself
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "15.1 (Sequoia)"
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: Cursor Mover version
+      description: From the About item in the menu, or `cursor-mover --version`.
+      placeholder: "1.1.0"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: accessibility
+    attributes:
+      label: Permissions
+      options:
+        - label: Cursor Mover is enabled under System Settings → Privacy & Security → Accessibility
+        - label: I relaunched the app after granting permission
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log output
+      description: If you can reproduce from source, paste the output of `cursor-mover --verbose`.
+      render: shell

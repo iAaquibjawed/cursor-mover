@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+*.png binary
+*.icns binary
+*.dmg binary
+
+# Keep generated artwork and docs out of language statistics.
+assets/* linguist-documentation
+docs/* linguist-documentation

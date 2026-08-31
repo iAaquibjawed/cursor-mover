@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to build (for a manual re-run)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev,build]"
+
+      - name: Verify
+        run: |
+          ruff check .
+          ruff format --check .
+          pytest
+
+      - name: Check the version matches the tag
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="$(python -c 'import cursor_mover; print(cursor_mover.__version__)')"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match cursor_mover.__version__ ($VERSION)."
+            exit 1
+          fi
+
+      - name: Build app and DMG
+        run: |
+          ./packaging/build_app.sh
+          ./packaging/create_dmg.sh
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/CursorMover-macOS.dmg
+          generate_release_notes: true
+          body: |
+            Download `CursorMover-macOS.dmg`, drag **CursorMover.app** into
+            Applications, and grant Accessibility permission on first launch.
+
+            This build is ad-hoc signed but **not notarized**. On first launch,
+            right-click the app and choose **Open**, then confirm.
