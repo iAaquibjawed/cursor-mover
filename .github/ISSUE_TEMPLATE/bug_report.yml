@@ -5,8 +5,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the report. Cursor Mover is macOS-only — if you are on
-        Windows or Linux, see the Platform support section of the README.
+        Thanks for the report. On Linux, please check first that
+        `echo $XDG_SESSION_TYPE` prints `x11` — Wayland does not allow
+        applications to move the pointer, and that is not a bug we can fix.
 
   - type: textarea
     id: what-happened
@@ -28,21 +29,33 @@ body:
       required: true
 
   - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - Windows
+        - Linux (X11)
+    validations:
+      required: true
+
+  - type: dropdown
     id: install-method
     attributes:
       label: How did you install it?
       options:
-        - DMG from a release
+        - Download from a release (DMG / zip / tarball)
         - From source (pip install -e .)
-        - Built the app myself
+        - Built it myself
     validations:
       required: true
 
   - type: input
-    id: macos-version
+    id: os-version
     attributes:
-      label: macOS version
-      placeholder: "15.1 (Sequoia)"
+      label: OS version
+      description: On Linux, please also name your desktop environment.
+      placeholder: "macOS 15.1 / Windows 11 23H2 / Ubuntu 24.04 + GNOME"
     validations:
       required: true
 
@@ -56,12 +69,13 @@ body:
       required: true
 
   - type: checkboxes
-    id: accessibility
+    id: environment-checks
     attributes:
-      label: Permissions
+      label: Checks
       options:
-        - label: Cursor Mover is enabled under System Settings → Privacy & Security → Accessibility
-        - label: I relaunched the app after granting permission
+        - label: "macOS only: Cursor Mover is enabled under System Settings → Privacy & Security → Accessibility, and I relaunched afterwards"
+        - label: "Linux only: `echo $XDG_SESSION_TYPE` prints `x11`, not `wayland`"
+        - label: "Linux only: my desktop shows system tray icons (GNOME needs the AppIndicator extension)" 
 
   - type: textarea
     id: logs

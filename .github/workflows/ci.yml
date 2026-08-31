@@ -7,11 +7,16 @@ on:
 
 jobs:
   test:
-    runs-on: macos-latest
+    name: Test ${{ matrix.os }} / py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        python-version: ["3.10", "3.12"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +24,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+
+      # pyautogui and pystray need an X display and GTK bindings on Linux.
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-tk xvfb libgirepository1.0-dev libcairo2-dev \
+            gir1.2-ayatanaappindicator3-0.1 scrot
 
       - name: Install
         run: pip install -e ".[dev]"
@@ -28,12 +42,41 @@ jobs:
           ruff check .
           ruff format --check .
 
+      # The suite never opens a window, but pyautogui imports X libraries on
+      # Linux, so it needs a display to import at all.
+      - name: Test (Linux, headless display)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a pytest --cov=cursor_mover --cov-report=term-missing
+
       - name: Test
+        if: runner.os != 'Linux'
         run: pytest --cov=cursor_mover --cov-report=term-missing
 
+      - name: Smoke test the CLI
+        run: |
+          cursor-mover --version
+          cursor-mover --help
+
   build:
-    runs-on: macos-latest
+    name: Build ${{ matrix.label }}
     needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            label: macOS
+            command: ./packaging/build_macos.sh
+            artifact: dist/CursorMover.app
+          - os: windows-latest
+            label: Windows
+            command: pwsh -File packaging/build_windows.ps1
+            artifact: dist/CursorMover.exe
+          - os: ubuntu-latest
+            label: Linux
+            command: ./packaging/build_linux.sh
+            artifact: dist/cursor-mover
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,13 +85,21 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-tk libgirepository1.0-dev libcairo2-dev \
+            gir1.2-ayatanaappindicator3-0.1 scrot
+
       - name: Install
         run: pip install -e ".[build]"
 
-      - name: Build app bundle
-        run: ./packaging/build_app.sh
+      - name: Build
+        run: ${{ matrix.command }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: CursorMover-app
-          path: dist/CursorMover.app
+          name: CursorMover-${{ matrix.label }}
+          path: ${{ matrix.artifact }}

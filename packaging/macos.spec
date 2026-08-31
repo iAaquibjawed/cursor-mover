@@ -1,16 +1,26 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for the CursorMover.app bundle.
+"""PyInstaller spec for the macOS CursorMover.app bundle.
 
 Run from the repository root:
 
-    pyinstaller --clean --noconfirm packaging/CursorMover.spec
+    pyinstaller --clean --noconfirm packaging/macos.spec
 """
 
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(SPECPATH).parent
 ICON = REPO_ROOT / "assets" / "icon.icns"
-VERSION = "1.1.0"
+def _package_version() -> str:
+    """Read __version__ from the package without importing it."""
+    init = REPO_ROOT / "src" / "cursor_mover" / "__init__.py"
+    match = re.search(r'__version__ = "([^"]+)"', init.read_text(encoding="utf-8"))
+    if match is None:
+        raise SystemExit("Could not find __version__ in src/cursor_mover/__init__.py")
+    return match.group(1)
+
+
+VERSION = _package_version()
 
 a = Analysis(
     [str(REPO_ROOT / "src" / "cursor_mover" / "__main__.py")],
@@ -19,6 +29,9 @@ a = Analysis(
     datas=[],
     hiddenimports=[
         "cursor_mover",
+        "cursor_mover.frontend.menubar",
+        "cursor_mover.runloop",
+        "cursor_mover.systemui.applescript",
         "pyautogui",
         "rumps",
         "objc",
@@ -30,7 +43,8 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["matplotlib", "pandas", "scipy", "tkinter", "pytest"],
+    # The macOS build uses AppleScript dialogs, so Tk and pystray are dead weight.
+    excludes=["matplotlib", "pandas", "scipy", "tkinter", "pytest", "pystray"],
     noarchive=False,
 )
 

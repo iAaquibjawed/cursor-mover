@@ -1,8 +1,11 @@
 # Cursor Mover - common development tasks.
 # Run `make help` for the list.
+#
+# Build targets are per-platform: PyInstaller cannot cross-compile, so each
+# artifact must be built on its own OS.
 
 .DEFAULT_GOAL := help
-.PHONY: help install run test lint format check icon app dmg clean
+.PHONY: help install run test lint format check icon icons app dmg linux windows clean
 
 PYTHON ?= python3
 
@@ -29,15 +32,25 @@ format: ## Apply formatting and safe lint fixes
 
 check: lint test ## Everything CI runs
 
-icon: ## Regenerate assets/icon.png and assets/icon.icns
-	$(PYTHON) assets/render_icon.py
+icons: ## Regenerate every icon format from cursor_mover.artwork
+	$(PYTHON) -m cursor_mover.artwork --size 1024 -o assets/icon.png
+	$(PYTHON) -m cursor_mover.artwork -o assets/icon.ico
 	./assets/make_icns.sh
 
-app: ## Build dist/CursorMover.app
-	./packaging/build_app.sh
+icon: icons ## Alias for `icons`
 
-dmg: app ## Build dist/CursorMover-macOS.dmg
+app: ## macOS: build dist/CursorMover.app
+	./packaging/build_macos.sh
+
+dmg: app ## macOS: build dist/CursorMover-macOS.dmg
 	./packaging/create_dmg.sh
+
+linux: ## Linux: build dist/cursor-mover and the tarball
+	./packaging/build_linux.sh
+
+windows: ## Windows: build dist/CursorMover.exe and the zip (run in PowerShell)
+	@echo "Run this in PowerShell instead: .\\packaging\\build_windows.ps1"
+	@exit 1
 
 clean: ## Remove build and cache artifacts
 	rm -rf build dist *.egg-info src/*.egg-info

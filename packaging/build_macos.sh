@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build dist/CursorMover.app with PyInstaller.
 #
-# Usage (from anywhere):  ./packaging/build_app.sh
+# Usage (from anywhere):  ./packaging/build_macos.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -23,7 +23,7 @@ info "Cleaning previous build output…"
 rm -rf build dist
 
 info "Building CursorMover.app…"
-pyinstaller --clean --noconfirm packaging/CursorMover.spec
+pyinstaller --clean --noconfirm packaging/macos.spec
 
 [[ -d dist/CursorMover.app ]] || fail "Build finished but dist/CursorMover.app is missing."
 

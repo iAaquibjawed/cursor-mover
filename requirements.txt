@@ -1,3 +1,6 @@
-# Runtime dependencies. For development use: pip install -e ".[dev]"
+# Runtime dependencies, resolved per platform. For development, prefer:
+#     pip install -e ".[dev,build]"
 pyautogui>=0.9.54
-rumps>=0.4.0
+rumps>=0.4.0; sys_platform == 'darwin'
+pystray>=0.19.5; sys_platform != 'darwin'
+python-xlib>=0.33; sys_platform == 'linux'

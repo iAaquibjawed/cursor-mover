@@ -1,0 +1,43 @@
+Cursor Mover for Windows
+========================
+
+INSTALL
+  1. Extract this zip anywhere you like, for example
+     C:\Users\<you>\AppData\Local\CursorMover
+  2. Double-click CursorMover.exe.
+  3. A cursor icon appears in the notification area (system tray), next to the
+     clock. There is no taskbar window.
+
+  Windows may show a "Windows protected your PC" SmartScreen warning, because
+  this build is not code-signed. Click "More info" then "Run anyway".
+
+USE
+  RIGHT-click the tray icon to open the menu. (Windows reserves left-click on a
+  tray icon for a default action, so the menu is on right-click; on macOS and
+  Linux a plain click opens it.)
+
+    Start / Stop Movement    begin or pause moving the cursor
+    Change Interval...       set how often it moves (10-3600 seconds)
+    About                    version and settings location
+    Quit                     stop and exit
+
+  Left-clicking the tray icon toggles movement without opening the menu.
+  Your interval is remembered between launches, in:
+    %APPDATA%\CursorMover\settings.json
+
+START IT AUTOMATICALLY (optional)
+  1. Press Win+R, type  shell:startup  and press Enter.
+  2. Create a shortcut to CursorMover.exe in the folder that opens.
+  To start it already running, add  --start  to the shortcut's Target.
+
+PERMISSIONS
+  None. Windows does not restrict pointer control.
+
+TROUBLESHOOTING
+  No tray icon       -> check the notification area overflow ("^" arrow) and
+                        Settings > Personalisation > Taskbar > "Select which
+                        icons appear on the taskbar".
+  Cursor won't move  -> some full-screen games and remote desktop sessions
+                        block synthetic pointer input. Try windowed mode.
+
+Source and issues: https://github.com/iAaquibjawed/cursor-mover

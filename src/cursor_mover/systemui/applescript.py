@@ -1,4 +1,4 @@
-"""Thin wrappers over the macOS system UI (notifications and dialogs).
+"""macOS implementation of :class:`~cursor_mover.systemui.SystemUI`.
 
 Everything here shells out to ``osascript``. User-supplied text is escaped with
 :func:`applescript_quote` so a stray quote or backslash cannot break — or
@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import NamedTuple
+
+from cursor_mover.systemui import TextPrompt
 
 logger = logging.getLogger(__name__)
 
@@ -62,13 +63,6 @@ def alert(title: str, message: str) -> None:
     _run_osascript(script, DIALOG_TIMEOUT_SECONDS)
 
 
-class TextPrompt(NamedTuple):
-    """Outcome of :func:`prompt_for_text`."""
-
-    confirmed: bool
-    text: str
-
-
 #: Separates the button name from the entered text in the AppleScript result.
 _FIELD_SEPARATOR = "\x1f"
 
@@ -100,3 +94,20 @@ def prompt_for_text(
 
     button, _, text = result.stdout.strip().partition(_FIELD_SEPARATOR)
     return TextPrompt(confirmed=button.strip() == confirm_label, text=text.strip())
+
+
+class AppleScriptUI:
+    """Dialogs and notifications via ``osascript``.
+
+    A thin object wrapper over this module's functions, so it satisfies the
+    :class:`~cursor_mover.systemui.SystemUI` protocol.
+    """
+
+    def notify(self, title: str, subtitle: str, message: str) -> None:
+        notify(title, subtitle, message)
+
+    def alert(self, title: str, message: str) -> None:
+        alert(title, message)
+
+    def prompt_for_text(self, title: str, message: str, default: str) -> TextPrompt:
+        return prompt_for_text(title, message, default)
