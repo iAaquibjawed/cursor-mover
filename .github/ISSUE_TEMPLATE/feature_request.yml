@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an improvement to Cursor Mover.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation you are in, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have considered
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      description: Cursor Mover is deliberately a small, single-purpose utility.
+      options:
+        - label: I have read the README and this is not already possible
