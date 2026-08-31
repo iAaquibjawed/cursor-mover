@@ -13,7 +13,7 @@ GRANT ACCESSIBILITY PERMISSION
 USE
   Click the "→" in the menu bar:
     ▶ Start Movement  (s)   begin moving the cursor
-    ⚙️ Change Interval (i)   set how often it moves (10-3600 seconds)
+    Change Interval... (i)  set how often it moves (10-3600 seconds)
     Quit              (q)   stop and exit
 
   Your interval is remembered between launches.

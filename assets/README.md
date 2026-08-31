@@ -10,6 +10,7 @@
 | `icon.png` | 1024×1024 RGBA — README, Linux `.desktop`, and the `.icns` source |
 | `icon.ico` | Multi-resolution Windows icon (16–256px) |
 | `icon.icns` | macOS app bundle icon |
+| `platforms/` | Third-party OS logos used in the README (see below) |
 
 The artwork itself is **not** in this folder — it is drawn procedurally by
 [`src/cursor_mover/artwork.py`](../src/cursor_mover/artwork.py), which is also
@@ -72,3 +73,36 @@ super().__init__(APP_NAME, icon="menubarTemplate.png", template=True, ...)
 
 `template=True` is what lets macOS recolour the icon for light and dark mode.
 Windows and Linux already use the full-colour icon from `artwork.py`.
+
+## Platform logos (`platforms/`)
+
+The README shows real OS logos rather than emoji stand-ins. Each is vendored
+locally so the README does not depend on a third-party CDN staying up, and each
+ships in two variants:
+
+| File | Used when |
+| --- | --- |
+| `*-on-light.svg` | light GitHub theme — ink `#1f2328` |
+| `*-on-dark.svg` | dark GitHub theme — ink `#e6edf3` |
+
+They are referenced with `<picture>` + `prefers-color-scheme`, which GitHub
+honours in Markdown, so the row stays legible in both themes.
+
+### Sources
+
+| Logo | Source | Why |
+| --- | --- | --- |
+| Apple | [Simple Icons](https://simpleicons.org) (CC0) | single path, ~660 bytes |
+| Linux (Tux) | [Simple Icons](https://simpleicons.org) (CC0) | monochrome, ~5 KB |
+| Windows | [Devicon](https://devicon.dev) (MIT) | Simple Icons removed all Microsoft marks for trademark reasons |
+
+Devicon's Tux was rejected: it is a 194 KB photorealistic trace with hundreds of
+gradient stops, which is absurd for a 15px icon.
+
+All three were recoloured to a single flat ink so the set reads as one system.
+To regenerate or restyle them, re-run the download and recolour steps documented
+in this file's git history, or edit the `fill` on the root `<svg>` element.
+
+> Apple, Windows, and the Linux penguin are trademarks of their respective
+> owners. They appear here solely to identify supported platforms — this project
+> is not affiliated with or endorsed by any of them.

@@ -15,10 +15,10 @@ icon you click for a menu.
 [![Downloads](https://img.shields.io/github/downloads/iAaquibjawed/cursor-mover/total?color=success)](https://github.com/iAaquibjawed/cursor-mover/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-![macOS](https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white)
-![Windows](https://img.shields.io/badge/Windows-10%2B-0078D6?logo=windows&logoColor=white)
-![Linux](https://img.shields.io/badge/Linux-X11-FCC624?logo=linux&logoColor=black)
-![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/apple-on-dark.svg"><img src="assets/platforms/apple-on-light.svg" alt="" width="15" height="15"></picture>&nbsp;&nbsp;**macOS** 11+ &nbsp;&nbsp;·&nbsp;&nbsp;
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/windows-on-dark.svg"><img src="assets/platforms/windows-on-light.svg" alt="" width="15" height="15"></picture>&nbsp;&nbsp;**Windows** 10+ &nbsp;&nbsp;·&nbsp;&nbsp;
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/linux-on-dark.svg"><img src="assets/platforms/linux-on-light.svg" alt="" width="15" height="15"></picture>&nbsp;&nbsp;**Linux** (X11) &nbsp;&nbsp;·&nbsp;&nbsp;
+[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
 
 [**Download**](#-download) · [Usage](#-usage) · [How it works](#-how-it-works) · [FAQ](#-faq) · [Contributing](CONTRIBUTING.md)
 
@@ -33,9 +33,9 @@ Each download includes a `README.txt` with full instructions.
 
 | Platform | File | Then |
 | :--- | :--- | :--- |
-| 🍎 **macOS** 11+ | `CursorMover-macOS.dmg` | Drag **CursorMover.app** to Applications → grant Accessibility |
-| 🪟 **Windows** 10+ | `CursorMover-Windows.zip` | Extract → run `CursorMover.exe` |
-| 🐧 **Linux** (X11, x86_64) | `CursorMover-Linux-x86_64.tar.gz` | Extract → `./install.sh`, or just `./cursor-mover` |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/apple-on-dark.svg"><img src="assets/platforms/apple-on-light.svg" alt="" width="15" height="15"></picture> **macOS** 11+ | `CursorMover-macOS.dmg` | Drag **CursorMover.app** to Applications → grant Accessibility |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/windows-on-dark.svg"><img src="assets/platforms/windows-on-light.svg" alt="" width="15" height="15"></picture> **Windows** 10+ | `CursorMover-Windows.zip` | Extract → run `CursorMover.exe` |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/linux-on-dark.svg"><img src="assets/platforms/linux-on-light.svg" alt="" width="15" height="15"></picture> **Linux** (X11, x86_64) | `CursorMover-Linux-x86_64.tar.gz` | Extract → `./install.sh`, or just `./cursor-mover` |
 
 > [!NOTE]
 > Builds are **not** code-signed or notarized, so the OS will warn you once.
@@ -90,9 +90,9 @@ has its own convention.
 
 | Platform | Open the menu | Bonus |
 | :--- | :--- | :--- |
-| 🍎 macOS | **click** the `→` in the menu bar | keyboard shortcuts `s` · `i` · `q` |
-| 🐧 Linux | **click** the tray icon | — |
-| 🪟 Windows | **right**-click the tray icon | left-click toggles start/stop |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/apple-on-dark.svg"><img src="assets/platforms/apple-on-light.svg" alt="" width="15" height="15"></picture> macOS | **click** the `→` in the menu bar | keyboard shortcuts `s` · `i` · `q` |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/linux-on-dark.svg"><img src="assets/platforms/linux-on-light.svg" alt="" width="15" height="15"></picture> Linux | **click** the tray icon | — |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/windows-on-dark.svg"><img src="assets/platforms/windows-on-light.svg" alt="" width="15" height="15"></picture> Windows | **right**-click the tray icon | left-click toggles start/stop |
 
 <sub>Windows reserves left-click on a tray icon for a default action and offers no
 way to open a menu programmatically, so right-click is the standard gesture there.</sub>
@@ -164,7 +164,7 @@ Windows and Linux need nothing.
 
 ---
 
-## 🐧 Linux: read this first
+## Linux: read this first
 
 > [!IMPORTANT]
 > **Cursor Mover requires an X11 / Xorg session.** Wayland deliberately forbids
@@ -210,7 +210,7 @@ All behaviour lives in a **toolkit-free core**; each platform is a thin view ove
 it. Adding a platform means implementing three small protocols, not touching the
 logic.
 
-| Concern | 🍎 macOS | 🪟 Windows | 🐧 Linux |
+| Concern | <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/apple-on-dark.svg"><img src="assets/platforms/apple-on-light.svg" alt="" width="15" height="15"></picture> macOS | <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/windows-on-dark.svg"><img src="assets/platforms/windows-on-light.svg" alt="" width="15" height="15"></picture> Windows | <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/linux-on-dark.svg"><img src="assets/platforms/linux-on-light.svg" alt="" width="15" height="15"></picture> Linux |
 | :--- | :--- | :--- | :--- |
 | **View** | menu bar (`rumps`) | tray (`pystray`) | tray (`pystray`) |
 | **Dialogs** | AppleScript | Tkinter | Tkinter |
