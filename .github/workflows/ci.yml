@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.11"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
@@ -80,7 +80,7 @@ jobs:
               dist/*.deb
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
@@ -114,7 +114,7 @@ jobs:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-47
       options: --privileged
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Catches the mistakes Flathub reviewers would catch: a malformed
       # manifest, missing AppStream fields, or a desktop file that does not
