@@ -28,18 +28,83 @@ icon you click for a menu.
 
 ## 📦 Download
 
-Grab your platform's file from the [**latest release**](https://github.com/iAaquibjawed/cursor-mover/releases/latest).
-Each download includes a `README.txt` with full instructions.
+No Python, no cloning, no build step — download one file and run it.
 
-| Platform | File | Then |
-| :--- | :--- | :--- |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/apple-on-dark.svg"><img src="assets/platforms/apple-on-light.svg" alt="" width="15" height="15"></picture> **macOS** 11+ | `CursorMover-macOS.dmg` | Drag **CursorMover.app** to Applications → grant Accessibility |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/windows-on-dark.svg"><img src="assets/platforms/windows-on-light.svg" alt="" width="15" height="15"></picture> **Windows** 10+ | `CursorMover-Windows.zip` | Extract → run `CursorMover.exe` |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/linux-on-dark.svg"><img src="assets/platforms/linux-on-light.svg" alt="" width="15" height="15"></picture> **Linux** (X11, x86_64) | `CursorMover-Linux-x86_64.tar.gz` | Extract → `./install.sh`, or just `./cursor-mover` |
+### macOS
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/apple-on-dark.svg"><img src="assets/platforms/apple-on-light.svg" alt="" width="16" height="16"></picture>&nbsp; Download **[`CursorMover-macOS.dmg`](https://github.com/iAaquibjawed/cursor-mover/releases/latest)**,
+open it, drag **CursorMover.app** into Applications, and launch it.
+Grant Accessibility permission on first **Start** — see [Permissions](#-permissions).
+
+### Windows
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/windows-on-dark.svg"><img src="assets/platforms/windows-on-light.svg" alt="" width="16" height="16"></picture>&nbsp; Download **[`CursorMover.exe`](https://github.com/iAaquibjawed/cursor-mover/releases/latest)**
+and double-click it. That's the whole install — it is a single self-contained
+file, needs no admin rights, and writes nothing to the registry.
+
+An icon appears in the notification area; **right-click** it for the menu.
+
+### Linux
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/platforms/linux-on-dark.svg"><img src="assets/platforms/linux-on-light.svg" alt="" width="16" height="16"></picture>&nbsp; Install from **Flathub** — one command, no repository to add:
+
+```bash
+flatpak install flathub io.github.iaaquibjawed.CursorMover
+```
+
+It also appears in **GNOME Software** and **KDE Discover**, so you can search
+for "Cursor Mover" and install it like any other app. Updates come with
+`flatpak update`.
+
+<details>
+<summary>Other Linux options — <code>apt</code>, a single <code>.deb</code>, or a portable tarball</summary>
+
+<br>
+
+**With `apt`.** Add the signed repository once, then install and update like any
+other package:
+
+```bash
+sudo install -d -m 0755 /etc/apt/keyrings
+
+curl -fsSL https://iaaquibjawed.github.io/cursor-mover/cursor-mover.asc \
+  | sudo tee /etc/apt/keyrings/cursor-mover.asc > /dev/null
+
+echo "deb [signed-by=/etc/apt/keyrings/cursor-mover.asc] https://iaaquibjawed.github.io/cursor-mover ./" \
+  | sudo tee /etc/apt/sources.list.d/cursor-mover.list > /dev/null
+
+sudo apt update
+sudo apt install cursor-mover
+```
+
+**A single `.deb`.** Download it from the
+[latest release](https://github.com/iAaquibjawed/cursor-mover/releases/latest);
+apt still resolves its dependencies:
+
+```bash
+sudo apt install ./cursor-mover_2.0.0-1_amd64.deb
+```
+
+**Portable tarball**, for non-Debian distros. Installs into your home directory,
+no root:
+
+```bash
+tar -xzf CursorMover-Linux-x86_64.tar.gz
+cd cursor-mover-linux
+./install.sh          # or just: ./cursor-mover
+```
+
+</details>
+
+Detailed instructions, autostart setup, and troubleshooting for each platform:
+**[macOS](docs/install/macos.txt)** ·
+**[Windows](docs/install/windows.txt)** ·
+**[Linux](docs/install/linux.txt)**
 
 > [!NOTE]
-> Builds are **not** code-signed or notarized, so the OS will warn you once.
+> The macOS and Windows builds are **not** code-signed, so the OS warns you once.
 > **macOS:** right-click the app → **Open**. **Windows:** **More info** → **Run anyway**.
+> The APT repository *is* GPG-signed, so `apt` verifies it normally.
 
 <sub>Prefer to run from source? See [Install from source](#install-from-source).</sub>
 
@@ -235,20 +300,97 @@ the threading rules, and the platform constraints in full.
 
 ### Install from source
 
-Requires Python 3.10+.
+Requires **Python 3.10+**. Platform dependencies resolve automatically —
+`rumps` on macOS, `pystray` and `python-xlib` elsewhere.
+
+<details open>
+<summary><b>macOS</b></summary>
+
+<br>
 
 ```bash
 git clone https://github.com/iAaquibjawed/cursor-mover.git
 cd cursor-mover
 
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev,build]"
+python3 -m venv .venv
+source .venv/bin/activate
 
+pip install -e ".[dev,build]"
 cursor-mover
 ```
 
-Platform dependencies resolve automatically — `rumps` on macOS, `pystray`
-elsewhere.
+A `→` appears in the menu bar. On first **Start**, macOS asks for Accessibility
+permission — grant it to **your terminal** (Terminal, iTerm2, VS Code), not to
+Python, then relaunch. See [Permissions](#-permissions).
+
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+<br>
+
+Note the activation path differs from macOS and Linux.
+
+```powershell
+git clone https://github.com/iAaquibjawed/cursor-mover.git
+cd cursor-mover
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1     # PowerShell
+# .venv\Scripts\activate.bat     # cmd.exe
+
+pip install -e ".[dev,build]"
+cursor-mover
+```
+
+> If PowerShell blocks the activation script, allow it for this session:
+> `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+
+An icon appears in the notification area. **Right-click** it for the menu.
+No permissions are required.
+
+</details>
+
+<details>
+<summary><b>Linux</b></summary>
+
+<br>
+
+Install the system packages first — Tkinter is not bundled with Python on most
+distributions:
+
+```bash
+sudo apt install python3-venv python3-tk   # Debian, Ubuntu
+sudo dnf install python3-tkinter           # Fedora
+sudo pacman -S tk                          # Arch
+```
+
+<sub>Debian and Ubuntu split `venv` out of the standard library, hence
+`python3-venv`. Fedora and Arch ship it with Python, so only Tkinter is
+needed.</sub>
+
+Then:
+
+```bash
+git clone https://github.com/iAaquibjawed/cursor-mover.git
+cd cursor-mover
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+pip install -e ".[dev,build]"
+cursor-mover
+```
+
+> [!IMPORTANT]
+> Confirm you are on X11 first — `echo $XDG_SESSION_TYPE` must print `x11`.
+> See [Linux: read this first](#linux-read-this-first).
+
+</details>
+
+<sub>No `make` on Windows? Every target is a one-line command — open the
+[`Makefile`](Makefile) and run the line you need directly.</sub>
 
 ### Common tasks
 

@@ -4,6 +4,34 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **`apt` installation for Linux.** A signed, flat APT repository is published to
+  GitHub Pages on each release, so users add it once and then install and update
+  with `sudo apt install cursor-mover` / `sudo apt upgrade`. Built by
+  `packaging/build_apt_repo.sh`; requires the `GPG_PRIVATE_KEY` secret and Pages
+  enabled — see [docs/RELEASING.md](docs/RELEASING.md).
+- A proper Debian package (`packaging/build_deb.sh`) with dependency metadata, a
+  desktop entry, an icon, machine-readable copyright, a Debian changelog, and
+  postinst/postrm hooks that refresh the desktop and icon caches. Also
+  installable standalone: `sudo apt install ./cursor-mover_2.0.0-1_amd64.deb`.
+- The bare `CursorMover.exe` is now a release asset, so Windows users download
+  and double-click one file instead of unzipping.
+- Per-platform install instructions for running from source. The previous
+  snippet used `source .venv/bin/activate`, which fails on Windows.
+- Real vendored OS logos (`assets/platforms/`) with light and dark variants,
+  replacing emoji stand-ins in the README.
+- `make deb` and `make apt` targets. CI now builds the `.deb` on every run.
+
+### Fixed
+- `docs/install/macos.txt` documented a "⚙️ Change Interval" menu item; the gear
+  was dropped from the real menu when the frontends were split.
+- The README's Windows platform badge used `logo=windows`, which renders no icon
+  at all — Simple Icons removed every Microsoft mark for trademark reasons.
+- `docs/install/{macos,windows,linux}.txt` were unreachable from GitHub; they
+  shipped only inside the release archives and are now linked from the README.
+
 ## [2.0.0]
 
 ### Added

@@ -1,0 +1,62 @@
+# Flatpak manifest for Cursor Mover.
+#
+# Build and install locally (Linux only):
+#     flatpak install -y flathub org.gnome.Sdk//47 org.gnome.Platform//47
+#     flatpak-builder --user --install --force-clean build \
+#         packaging/flatpak/io.github.iaaquibjawed.CursorMover.yml
+#     flatpak run io.github.iaaquibjawed.CursorMover
+#
+# Python dependencies are pinned with checksums by generate_python_sources.py,
+# because Flatpak builds run with no network access.
+
+id: io.github.iaaquibjawed.CursorMover
+
+# The GNOME runtime carries GTK 3 and PyGObject, which is all this app needs:
+# pystray's GtkStatusIcon backend for the tray, and Gtk dialogs for the UI.
+# libayatana-appindicator is deliberately NOT built. pystray tries the
+# appindicator backend first, fails to find the typelib, and falls back to the
+# gtk backend, which supports a popup menu. Building three extra C libraries to
+# gain nothing visible is not worth the fragility.
+runtime: org.gnome.Platform
+runtime-version: '47'
+sdk: org.gnome.Sdk
+
+command: cursor-mover
+
+finish-args:
+  # Moving the pointer uses the X11 XTEST extension, so real X11 access is
+  # required. No --socket=wayland: Wayland forbids applications from moving the
+  # pointer, and offering it would only produce a silently broken app.
+  - --socket=x11
+  - --share=ipc
+  # Posting notifications.
+  - --talk-name=org.freedesktop.Notifications
+  # Settings live in the sandboxed per-app config directory. No host filesystem,
+  # network, or device access is requested.
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/man
+  - '*.la'
+  - '*.a'
+
+modules:
+  # Pinned Python dependencies. Regenerate with:
+  #     python3 packaging/flatpak/generate_python_sources.py
+  - python3-dependencies.json
+
+  - name: cursor-mover
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --no-index --no-build-isolation --no-deps
+        --prefix=${FLATPAK_DEST} .
+      - install -Dm644 assets/icon.png
+        ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png
+      - install -Dm644 packaging/flatpak/${FLATPAK_ID}.desktop
+        ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 packaging/flatpak/${FLATPAK_ID}.metainfo.xml
+        ${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml
+    sources:
+      - type: dir
+        path: ../..

@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- Landing page for the APT repository published to GitHub Pages.
+     __VERSION__ is substituted by the release workflow. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cursor Mover — APT repository</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 46rem; margin: 0 auto; padding: 3rem 1.25rem;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+  .sub { opacity: .7; margin-top: 0; }
+  pre {
+    background: rgba(127,127,127,.12); padding: 1rem; border-radius: 8px;
+    overflow-x: auto; font-size: .875rem;
+  }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .note {
+    border-left: 3px solid #6366f1; padding: .6rem 1rem; margin: 1.5rem 0;
+    background: rgba(99,102,241,.08);
+  }
+  a { color: #6366f1; }
+  footer { margin-top: 3rem; opacity: .6; font-size: .875rem; }
+</style>
+</head>
+<body>
+
+<h1>Cursor Mover — APT repository</h1>
+<p class="sub">Current version: <strong>__VERSION__</strong> · amd64 · Debian, Ubuntu, and derivatives</p>
+
+<p>Keep your computer awake by nudging the cursor. Add this repository once and
+you get updates through <code>apt upgrade</code> like any other package.</p>
+
+<h2>Install</h2>
+<pre><code>sudo install -d -m 0755 /etc/apt/keyrings
+
+curl -fsSL https://iaaquibjawed.github.io/cursor-mover/cursor-mover.asc \
+  | sudo tee /etc/apt/keyrings/cursor-mover.asc &gt; /dev/null
+
+echo "deb [signed-by=/etc/apt/keyrings/cursor-mover.asc] https://iaaquibjawed.github.io/cursor-mover ./" \
+  | sudo tee /etc/apt/sources.list.d/cursor-mover.list &gt; /dev/null
+
+sudo apt update
+sudo apt install cursor-mover</code></pre>
+
+<p>Then launch <strong>Cursor Mover</strong> from your application menu, or run
+<code>cursor-mover</code>.</p>
+
+<div class="note">
+<strong>X11 only.</strong> Wayland does not permit applications to move the
+pointer, so Cursor Mover cannot work there. Check with
+<code>echo $XDG_SESSION_TYPE</code> — it must print <code>x11</code>.
+</div>
+
+<h2>Update and remove</h2>
+<pre><code>sudo apt update &amp;&amp; sudo apt upgrade cursor-mover
+sudo apt remove cursor-mover</code></pre>
+
+<h2>Prefer not to add a repository?</h2>
+<p>Download the <code>.deb</code> from the
+<a href="https://github.com/iAaquibjawed/cursor-mover/releases/latest">latest release</a>
+and install it directly:</p>
+<pre><code>sudo apt install ./cursor-mover___VERSION__-1_amd64.deb</code></pre>
+
+<footer>
+This repository is signed. Only the most recent version is served here; older
+releases stay on the
+<a href="https://github.com/iAaquibjawed/cursor-mover/releases">Releases page</a>.
+·
+<a href="https://github.com/iAaquibjawed/cursor-mover">Source</a>
+·
+MIT licensed
+</footer>
+
+</body>
+</html>
