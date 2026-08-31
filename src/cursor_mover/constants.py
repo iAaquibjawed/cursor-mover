@@ -6,10 +6,15 @@ from typing import Final
 
 APP_NAME: Final = "Cursor Mover"
 BUNDLE_NAME: Final = "CursorMover"
+#: Lower-case identifier for XDG paths and executable names.
+SLUG: Final = "cursor-mover"
 BUNDLE_IDENTIFIER: Final = "com.cursormover.app"
 
-#: Shown in the menu bar. Kept to a single glyph so the bar stays tidy.
+#: Shown in the macOS menu bar. Kept to a single glyph so the bar stays tidy.
 MENU_BAR_TITLE: Final = "→"
+
+#: Tooltip shown when hovering the Windows/Linux tray icon.
+TRAY_TOOLTIP: Final = APP_NAME
 
 #: Movement interval bounds, in seconds.
 MIN_INTERVAL_SECONDS: Final = 10

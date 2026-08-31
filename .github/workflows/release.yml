@@ -13,8 +13,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: macos-latest
+  verify:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -23,14 +23,21 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install
-        run: pip install -e ".[dev,build]"
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-tk xvfb libgirepository1.0-dev libcairo2-dev \
+            gir1.2-ayatanaappindicator3-0.1 scrot
 
-      - name: Verify
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint and test
         run: |
           ruff check .
           ruff format --check .
-          pytest
+          xvfb-run -a pytest
 
       - name: Check the version matches the tag
         run: |
@@ -41,19 +48,83 @@ jobs:
             exit 1
           fi
 
-      - name: Build app and DMG
+  build:
+    name: Build ${{ matrix.label }}
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            label: macOS
+            command: ./packaging/build_macos.sh && ./packaging/create_dmg.sh
+            artifact: dist/CursorMover-macOS.dmg
+          - os: windows-latest
+            label: Windows
+            command: pwsh -File packaging/build_windows.ps1
+            artifact: dist/CursorMover-Windows.zip
+          - os: ubuntu-latest
+            label: Linux
+            command: ./packaging/build_linux.sh
+            artifact: dist/CursorMover-Linux-x86_64.tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
         run: |
-          ./packaging/build_app.sh
-          ./packaging/create_dmg.sh
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-tk libgirepository1.0-dev libcairo2-dev \
+            gir1.2-ayatanaappindicator3-0.1 scrot
+
+      - name: Install
+        run: pip install -e ".[build]"
+
+      - name: Build
+        run: ${{ matrix.command }}
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.label }}
+          path: ${{ matrix.artifact }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/CursorMover-macOS.dmg
+          files: dist/*
           generate_release_notes: true
           body: |
-            Download `CursorMover-macOS.dmg`, drag **CursorMover.app** into
-            Applications, and grant Accessibility permission on first launch.
+            ## Downloads
 
-            This build is ad-hoc signed but **not notarized**. On first launch,
-            right-click the app and choose **Open**, then confirm.
+            | Platform | File |
+            | --- | --- |
+            | macOS | `CursorMover-macOS.dmg` |
+            | Windows | `CursorMover-Windows.zip` |
+            | Linux (x86_64, X11) | `CursorMover-Linux-x86_64.tar.gz` |
+
+            Installation notes for each platform are inside the download.
+
+            These builds are **not** code-signed or notarized. macOS: right-click
+            the app and choose Open. Windows: click "More info" then "Run anyway"
+            at the SmartScreen prompt.
+
+            Linux requires an X11 / Xorg session — Wayland does not permit
+            applications to move the pointer.

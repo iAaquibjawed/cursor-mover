@@ -1,9 +1,8 @@
 """Persisted user settings.
 
-Settings live in the standard macOS per-user location so they survive app
-upgrades and are removed cleanly with the app:
-
-    ~/Library/Application Support/CursorMover/settings.json
+Settings live in the platform's conventional per-user location, resolved by
+:mod:`cursor_mover.paths`, so they survive upgrades and are removed cleanly
+with the app.
 
 Every read is defensive: a missing, unreadable, or corrupt file falls back to
 defaults rather than preventing the app from launching.
@@ -17,20 +16,15 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from cursor_mover.constants import (
-    BUNDLE_NAME,
     DEFAULT_INTERVAL_SECONDS,
     MAX_INTERVAL_SECONDS,
     MIN_INTERVAL_SECONDS,
 )
+from cursor_mover.paths import config_dir as default_config_dir
 
 logger = logging.getLogger(__name__)
 
 SETTINGS_FILENAME = "settings.json"
-
-
-def default_config_dir() -> Path:
-    """Return the directory Cursor Mover stores its settings in."""
-    return Path.home() / "Library" / "Application Support" / BUNDLE_NAME
 
 
 class InvalidIntervalError(ValueError):
@@ -81,7 +75,7 @@ class SettingsStore:
     """Loads and saves :class:`Settings` as JSON on disk."""
 
     def __init__(self, config_dir: Path | None = None) -> None:
-        self.config_dir = config_dir or default_config_dir()
+        self.config_dir = config_dir if config_dir is not None else default_config_dir()
         self.path = self.config_dir / SETTINGS_FILENAME
 
     def load(self) -> Settings:

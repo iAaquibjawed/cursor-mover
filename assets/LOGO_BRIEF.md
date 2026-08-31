@@ -64,7 +64,7 @@ more technical feel.
 - The design must be legible in **greyscale**, since that is a good proxy for
   small sizes and accessibility.
 
-## 6. The menu bar icon is a separate deliverable
+## 6. The macOS menu bar icon is a separate deliverable
 
 macOS menu bar icons are **template images**: pure black shapes on transparency,
 which the system automatically inverts for dark mode and dims when inactive.
@@ -82,11 +82,14 @@ template icon is a one-line change in `src/cursor_mover/app.py`.
 ## 7. Deliverables checklist
 
 - [ ] `icon.svg` — the master, vector, 1024×1024 artboard
-- [ ] `icon.png` — 1024×1024, for the README and GitHub
-- [ ] `icon.icns` — the app bundle icon (see `make_icns.sh` in this folder)
-- [ ] `menubarTemplate.png` + `menubarTemplate@2x.png` — black-on-transparent
-- [ ] A 16×16 export, checked by eye — if the trail turns to mush at that size,
-      reduce it to two larger dots
+- [ ] `icon.png` — 1024×1024 RGBA, for the README and the Linux desktop entry
+- [ ] `icon.icns` — the macOS app bundle icon (`make_icns.sh`)
+- [ ] `icon.ico` — the Windows icon, 16–256px in one file
+- [ ] `menubarTemplate.png` + `menubarTemplate@2x.png` — black-on-transparent,
+      macOS menu bar only
+- [ ] A 16×16 export, checked by eye — this is the size Windows shows in the
+      notification area, and the current trail dissolves there. Reducing to two
+      larger dots is the known fix.
 
 ---
 
@@ -132,10 +135,11 @@ noise, drop shadow, glossy reflection, busy background, multiple icons, border.
 
 ## 9. Building it by hand instead
 
-`icon.svg` in this folder is a working starting point built to this brief, and
-`render_icon.py` renders it to PNG with a correct alpha channel. Open the SVG in
-Figma, Sketch, or Illustrator, refine the pointer silhouette, then run
-`render_icon.py` followed by `./make_icns.sh`.
+`icon.svg` in this folder is a working starting point built to this brief. The
+authoritative version is drawn in code by `src/cursor_mover/artwork.py`, which
+also supplies the Windows/Linux tray icon at runtime. Open the SVG in Figma,
+Sketch, or Illustrator, refine the pointer silhouette, port the geometry back
+into `artwork.py`, then run `make icons`.
 
 **Export transparency, not a checkerboard.** Whatever tool you use, confirm the
 corner pixel of the exported PNG is `(0, 0, 0, 0)` and not white or grey. An

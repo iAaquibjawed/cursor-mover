@@ -16,7 +16,7 @@ green() { printf '\033[0;32m✓\033[0m %s\n' "$1"; }
 info()  { printf '\033[1;33m→\033[0m %s\n' "$1"; }
 fail()  { printf '\033[0;31m✗\033[0m %s\n' "$1" >&2; exit 1; }
 
-[[ -d "$APP_PATH" ]] || fail "$APP_PATH not found. Build it first: ./packaging/build_app.sh"
+[[ -d "$APP_PATH" ]] || fail "$APP_PATH not found. Build it first: ./packaging/build_macos.sh"
 
 rm -f "$DMG_PATH"
 rm -rf "$STAGING_DIR"
@@ -25,7 +25,7 @@ mkdir -p "$STAGING_DIR"
 info "Staging bundle…"
 cp -R "$APP_PATH" "$STAGING_DIR/"
 ln -s /Applications "$STAGING_DIR/Applications"
-cp docs/INSTALL.txt "$STAGING_DIR/README.txt"
+cp docs/install/macos.txt "$STAGING_DIR/README.txt"
 
 info "Creating disk image…"
 hdiutil create \

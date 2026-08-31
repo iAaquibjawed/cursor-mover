@@ -1,0 +1,64 @@
+Cursor Mover for Linux
+======================
+
+REQUIREMENTS
+  * An X11 / Xorg session. Wayland does NOT allow applications to move the
+    pointer, so Cursor Mover cannot work there. Check your session with:
+        echo $XDG_SESSION_TYPE
+    If it prints "wayland", log out and choose an Xorg session at the login
+    screen. Cursor Mover will warn you at startup.
+
+  * A tray that can show a menu. KDE, XFCE, Cinnamon, MATE, and Budgie all
+    have one. GNOME needs the "AppIndicator and KStatusNotifierItem Support"
+    extension. Without a menu-capable tray, Cursor Mover opens a small window
+    instead — it will not leave you with an icon that does nothing.
+
+  * For dialogs, Tkinter:
+        Debian/Ubuntu   sudo apt install python3-tk
+        Fedora          sudo dnf install python3-tkinter
+        Arch            sudo pacman -S tk
+    (Only needed when running from source; the bundled binary includes it.)
+
+INSTALL
+  From this tarball, for the current user only, no root required:
+      ./install.sh
+
+  That places:
+      ~/.local/bin/cursor-mover                          the binary
+      ~/.local/share/applications/cursor-mover.desktop    menu entry
+      ~/.local/share/icons/.../cursor-mover.png           icon
+
+  Or just run it in place:
+      ./cursor-mover
+
+USE
+  Click the tray icon to open the menu, the same as the macOS version:
+    Start / Stop Movement    begin or pause moving the cursor
+    Change Interval...       set how often it moves (10-3600 seconds)
+    About                    version and settings location
+    Quit                     stop and exit
+
+  Your interval is remembered between launches, in:
+    ${XDG_CONFIG_HOME:-~/.config}/cursor-mover/settings.json
+
+  If you get a window instead of a tray icon, your desktop has no tray. To
+  choose explicitly:
+      ./cursor-mover --ui window     always use a window
+      ./cursor-mover --ui tray       always use a tray icon
+
+START IT AUTOMATICALLY (optional)
+  Copy the desktop entry into the autostart directory:
+      mkdir -p ~/.config/autostart
+      cp ~/.local/share/applications/cursor-mover.desktop ~/.config/autostart/
+  To start it already running, append --start to the Exec= line.
+
+TROUBLESHOOTING
+  No tray icon        -> your desktop has no status-notifier host, so a
+                         window opens instead. That is expected; see the
+                         AppIndicator note above to get a tray icon.
+  Cursor won't move   -> confirm  echo $XDG_SESSION_TYPE  prints x11.
+  No dialogs appear   -> install the Tkinter package listed above.
+  Nothing at all      -> run  ./cursor-mover --verbose  in a terminal and read
+                         the log output.
+
+Source and issues: https://github.com/iAaquibjawed/cursor-mover

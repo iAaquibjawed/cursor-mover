@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cursor_mover import macos
+from cursor_mover.systemui import applescript as macos
 
 
 class TestApplescriptQuote:

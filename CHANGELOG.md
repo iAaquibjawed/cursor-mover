@@ -4,19 +4,62 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0]
 
 ### Added
-- Open-source project scaffolding: issue and pull request templates, a tagged
-  release workflow, Dependabot, `SECURITY.md`, `CODE_OF_CONDUCT.md`,
-  `docs/ARCHITECTURE.md`, a `Makefile`, `.editorconfig`, `.gitattributes`, and
-  an optional pre-commit configuration.
-- `assets/render_icon.py`, which renders the icon with a real alpha channel.
-  The macOS SVG rasterisers flatten output onto opaque white, which left a white
-  square behind the icon.
+- **Windows and Linux support.** The app now runs on macOS, Windows, and Linux
+  from one codebase, with a `pystray` system tray frontend alongside the macOS
+  `rumps` menu bar.
+- `controller.py`, holding all application behaviour so it is shared by both
+  frontends and testable without a GUI toolkit.
+- `Scheduler` protocol with two implementations: the macOS run-loop timer
+  (`runloop.py`) and a thread timer for Windows/Linux, plus a `ManualScheduler`
+  test double so the suite never sleeps waiting for a tick.
+- `SystemUI` protocol with an AppleScript implementation for macOS and a Tkinter
+  one for Windows/Linux; notifications fall through the tray icon,
+  `notify-send`, then logging.
+- `paths.py`, resolving the per-platform data directory (Application Support,
+  `%APPDATA%`, `$XDG_CONFIG_HOME`).
+- A Tkinter window frontend (`frontend/window.py`) used automatically when the
+  desktop cannot show a tray menu. Two cases: no tray backend at all (GNOME
+  without the AppIndicator extension), which would leave the app running
+  invisibly; and pystray's bare X11 backend, which sets `HAS_MENU = False` and
+  would show an icon that does nothing when clicked. Adapted from the approach
+  on the `cross-platform` branch, rebuilt on the shared controller.
+- Wayland detection with a startup warning, since Wayland forbids applications
+  from moving the pointer.
+- `--interval`, `--start`, and `--ui {auto,tray,window}` command line flags.
+- An optional dispatcher on `Controller`, so work raised on the timer thread is
+  marshalled onto a frontend's event loop. `WindowFrontend` supplies Tkinter's
+  `after`; without it, a failed move would touch widgets off the main thread.
+- Windows `.ico` output, a Linux `.desktop` entry, a per-user Linux installer,
+  PyInstaller specs and build scripts for all three platforms, and per-platform
+  install documentation under `docs/install/`.
+- CI now runs the suite on macOS, Windows, and Ubuntu, and the release workflow
+  builds and publishes all three artifacts from one tag.
+- 55 new tests (95 total) covering the controller, schedulers, paths, and the
+  system UI factory.
 
 ### Changed
-- Consolidated the artwork on `assets/icon.png` as the single canonical logo.
+- The macOS frontend moved from `app.py` to `frontend/menubar.py` and is now a
+  thin view: it renders `AppState` and forwards intent to the controller.
+- `macos.py` moved to `systemui/applescript.py`.
+- The icon geometry moved into the package as `artwork.py`, so the tray frontend
+  and the file renderer share one source of truth. `assets/render_icon.py` is a
+  shim.
+- Dependencies are now platform-conditional: `rumps` only on macOS, `pystray`
+  and `python-xlib` only elsewhere.
+- The version is declared once, in `src/cursor_mover/__init__.py`; the
+  PyInstaller specs read it from there instead of duplicating it.
+- Build scripts renamed for clarity: `packaging/build_macos.sh`,
+  `packaging/build_linux.sh`, `packaging/build_windows.ps1`, and specs
+  `macos.spec`, `windows.spec`, `linux.spec`.
+
+### Known limitations
+- **Linux requires X11.** Wayland cannot be supported.
+- GNOME needs an AppIndicator extension to show a tray icon; without it the app
+  falls back to a window.
+- Keyboard shortcuts remain macOS-only; pystray has no accelerator support.
 
 ## [1.1.0]
 
