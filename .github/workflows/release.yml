@@ -147,7 +147,7 @@ jobs:
             pathlib.Path('src/cursor_mover/__init__.py').read_text()).group(1))")"
           sed "s/__VERSION__/$VERSION/g" packaging/apt-index.html > dist/apt/index.html
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v3
         with:
